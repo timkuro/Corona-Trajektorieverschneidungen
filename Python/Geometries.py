@@ -7,7 +7,7 @@ class Point:
         self.timestamp = timestamp
 
     def __str__(self):
-        return (self.x + " " + self.y + " " + self.timestamp)
+        return f"Point:[X:{self.x}, Y: {self.y}, TimeStamp: {self.timestamp}]"
 
 class Linestring:
     def __init__(self, startpoint, endpoint):
@@ -26,7 +26,7 @@ class Linestring:
             raise Exception("No intersection found")
 
     def __str__(self):
-        return str(self.startpoint) + " " + str(self.endpoint)
+        return "Line:[" +str(self.startpoint) + ", " + str(self.endpoint) +"]"
 
 class Crosspoint:
     def __init__(self, point, line1, line2):
@@ -34,8 +34,10 @@ class Crosspoint:
         self.line1 = line1
         self.line2 = line2
 
+    def __str__(self):
+        return f"Crosspoint[{self.point}, 1: {self.line1}, 2: {self.line2}]"
 
-'''test = (Linestring(Point(1,1, None), Point(1,2, None)).intersect(Linestring(Point(2,1, None), Point(2, 2, None))))
+
 test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
 print(type(test))
 print(test)
