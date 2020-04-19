@@ -39,8 +39,42 @@ def split_line(input_line):
 def convert_to_kml(linestrings):
     pass
 
-def intersect_geom(linestrings):
+def intersect_geom(linestring_1, linestring_2):
+    #Vorbereitungen
+    #Ergebnisobjekt bilden
+    result = list();
+    #Sweep - Status - Struktur
+    # sss anlegen
+    sss = set()
+    #Punktliste anlegen
+    ptl_1 = list()
+    ptl_2 = list()
+
+
+
+    for line in linestring_1:
+        ptl_1.append([line.startpoint, line])
+        ptl_1.append([line.endpoint, line])
+
+    for line in linestring_2:
+        ptl_2.append([line.startpoint, line])
+        ptl_2.append([line.endpoint, line])
+
+    ptl_1 = sorted(ptl_1, key=lambda list_element: list_element[0].x)
+    ptl_2 = sorted(ptl_2, key=lambda list_element: list_element[0].x)
+
+    for point in ptl_1:
+        print(point[0])
+
+    for point in ptl_1:
+        trace = point[1]
+        if sss.contains(trace):
+            sss.remove(trace)
+        else:
+            pass
     pass
+
+
 
 def intersect_time(crosspoints):
     pass
@@ -57,4 +91,5 @@ elif(os.environ['USERNAME'] == "chris"):
     path = path_kort
 
 print(read_kml_line(path))
-split_line(read_kml_line(path))
+lines = split_line(read_kml_line(path))
+intersect_geom(lines, None)
