@@ -47,11 +47,14 @@ def intersect_time(crosspoints):
 
 path_timmy=r"D:\Uni-Lokal\GI-Projekt Corona\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"
 path_tommy=r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"
+path_kort=r"C:\Users\chris\OneDrive - hs-bochum.de\GI_Projekt_Wytzisk\Standortverlauf_Christian_Juli2019.kml"
 
 if(os.environ['USERNAME'] == "Thomas"):
     path = path_tommy
 elif(os.environ['USERNAME'] == "Tim"):
     path = path_timmy
+elif(os.environ['USERNAME'] == "chris"):
+    path = path_kort
 
 print(read_kml_line(path))
 split_line(read_kml_line(path))
