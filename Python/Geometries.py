@@ -15,27 +15,30 @@ class Linestring:
         self.endpoint = endpoint
 
     def intersect(self, other_line):
-        myline = arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]))
-        otherline = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]))
-        if myline.intersect(otherline, 1):
-            return True
+        self_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]))
+        other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]))
+        intersect_point = self_arcpy.intersect(other_arcpy, 1)
+
+        if intersect_point:
+            cross_point = Crosspoint(Point(intersect_point.firstPoint.X, intersect_point.firstPoint.Y, None), self, other_line)
+            return cross_point
         else:
-            return False
+            raise Exception("No intersection found")
 
     def __str__(self):
         return str(self.startpoint) + " " + str(self.endpoint)
 
 class Crosspoint:
-    def __init__(self, point, lambda1, lambda2, line1, line2):
+    def __init__(self, point, line1, line2):
         self.point = point
-        self.lambda1 = lambda1
-        self.lambda2 = lambda2
         self.line1 = line1
         self.line2 = line2
 
 
 '''test = (Linestring(Point(1,1, None), Point(1,2, None)).intersect(Linestring(Point(2,1, None), Point(2, 2, None))))
+test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
 print(type(test))
+print(test)
 if not test:
     print('keine geometrie')
-#print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))'''
+#print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))
