@@ -9,12 +9,16 @@ class Point:
     def __str__(self):
         return f"Point:[X:{self.x}, Y: {self.y}, TimeStamp: {self.timestamp}]"
 
+
 class Linestring:
     def __init__(self, startpoint, endpoint):
         self.startpoint = startpoint
         self.endpoint = endpoint
 
-    def intersect(self, other_line):
+    '''
+        Verschneidet Linien
+    '''
+    def intersect_Lines(self, other_line):
         self_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]))
         other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]))
         intersect_point = self_arcpy.intersect(other_arcpy, 1)
@@ -22,6 +26,23 @@ class Linestring:
         if intersect_point:
             cross_point = Crosspoint(Point(intersect_point.firstPoint.X, intersect_point.firstPoint.Y, None), self, other_line)
             return cross_point
+        else:
+            raise Exception("No intersection found")
+
+    '''
+        Berechnet zu jeder Linie einen Puffer und verschneidet diese
+    '''
+    def intersect_Buffer(self, other_line):
+        self_arcpy =  arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]))
+        other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]))
+
+        self_buffer = self_arcpy.buffer(2)
+        other_buffer = other_arcpy.buffer(2)
+        intersect_buffer = self_buffer.intersect(other_buffer, 2)
+
+        if intersect_buffer:
+            cross_area = Crossarea(intersect_buffer, self, other_line)
+            return cross_area
         else:
             raise Exception("No intersection found")
 
@@ -37,8 +58,16 @@ class Crosspoint:
     def __str__(self):
         return f"Crosspoint[{self.point}, 1: {self.line1}, 2: {self.line2}]"
 
+class Crossarea:
+    def __init__(self, polygon, line1, line2):
+        self.polygon = polygon
+        self.line1 = line1
+        self.line2 = line2
 
-test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
+    def __str__(self):
+        return f"Crossarea[{self.polygon}, 1: {self.line1}, 2: {self.line2}]"
+
+test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Lines(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
 print(type(test))
 print(test)
 if not test:
