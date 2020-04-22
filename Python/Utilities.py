@@ -58,7 +58,7 @@ def intersect_geom(linestring_1, linestring_2):
         ptl_1.append([line.startpoint, line])
         ptl_1.append([line.endpoint, line])
         lines_set_1.add(line)
-
+    print(linestring_2)
     # Jeder Punkt bekommt seine Linien zugewiesen
     for line in linestring_2:
         ptl_2.append([line.startpoint, line])
@@ -80,7 +80,7 @@ def intersect_geom(linestring_1, linestring_2):
     for point in ptl_sorted:
         # Hole vom ersten Punkt die zugehörige Linie (= trace)
         trace = point[1]
-        if sss.contains(trace):
+        if trace in sss:
             sss.remove(trace)
         else:
             for line in sss:
@@ -122,5 +122,6 @@ elif(os.environ['USERNAME'] == "chris"):
     path = path_kort
 
 print(read_kml_line(path))
-lines = split_line(read_kml_line(path))
-intersect_geom(lines, None)
+lines1 = split_line(read_kml_line(path))
+lines2 = split_line(read_kml_line(path))
+intersect_geom(lines1, lines2)
