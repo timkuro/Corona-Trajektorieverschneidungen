@@ -50,29 +50,60 @@ def intersect_geom(linestring_1, linestring_2):
     ptl_1 = list()
     ptl_2 = list()
 
+    lines_set_1 = set()
+    lines_set_2 = set()
 
-
+    # Jeder Punkt bekommt seine Linien zugewiesen
     for line in linestring_1:
         ptl_1.append([line.startpoint, line])
         ptl_1.append([line.endpoint, line])
+        lines_set_1.add(line)
 
+    # Jeder Punkt bekommt seine Linien zugewiesen
     for line in linestring_2:
         ptl_2.append([line.startpoint, line])
         ptl_2.append([line.endpoint, line])
+        lines_set_2.add(line)
 
-    ptl_1 = sorted(ptl_1, key=lambda list_element: list_element[0].x)
-    ptl_2 = sorted(ptl_2, key=lambda list_element: list_element[0].x)
+    ptl_gesamt = ptl_1.extend(ptl_2)
+    ptl_sorted = sorted(ptl_1, key=lambda list_element: list_element[0].x)
 
-    for point in ptl_1:
+    # Sortierung nach der x-Komponente
+    # ptl_1 = sorted(ptl_1, key=lambda list_element: list_element[0].x)
+    # ptl_2 = sorted(ptl_2, key=lambda list_element: list_element[0].x)
+
+    # Nur Ausgabe
+    for point in ptl_sorted:
         print(point[0])
 
-    for point in ptl_1:
+    # Jeder Punkt der sortierten Punktliste wird durchlaufen
+    for point in ptl_sorted:
+        # Hole vom ersten Punkt die zugehörige Linie (= trace)
         trace = point[1]
         if sss.contains(trace):
             sss.remove(trace)
         else:
-            pass
-    pass
+            for line in sss:
+                cross_area = None
+                # Ermitteln ob Schnittpunkt vorhanden ist
+                if trace in lines_set_1:
+                    if line in lines_set_2:
+                        try:
+                            cross_area = trace.intersect_Buffer(line)
+                            result.add(cross_area)
+                        except:
+                            continue
+                    #else: "Linie aus SSS ist aus der gleichen Menge wie Trace")
+                else:
+                    if line in lines_set_1:
+                        try:
+                            cross_area = trace.intersect_Buffer(line)
+                            result.add(cross_area)
+                        except:
+                            continue
+            sss.add(trace)
+    print(result)
+    return result
 
 
 
