@@ -1,4 +1,5 @@
 import arcpy
+from time import localtime
 
 class Point:
     def __init__(self, x, y, timestamp):
@@ -7,7 +8,7 @@ class Point:
         self.timestamp = timestamp
 
     def __str__(self):
-        return f"Point:[X:{self.x}, Y: {self.y}, TimeStamp: {self.timestamp}]"
+        return f"Point:[X:{self.x}, Y: {self.y}, TimeStamp: {localtime(self.timestamp)}]"
 
 
 class Linestring:
@@ -46,8 +47,8 @@ class Linestring:
         else:
             raise Exception("No intersection found")
 
-    def __str__(self):
-        return "Line:[" +str(self.startpoint) + ", " + str(self.endpoint) +"]"
+    def __repr__(self):
+        return f"Line:[ {self.startpoint} ,  {self.endpoint} ]"
 
 class Crosspoint:
     def __init__(self, point, line1, line2):
@@ -66,10 +67,12 @@ class Crossarea:
 
     def __str__(self):
         return f"Crossarea[{self.polygon}, 1: {self.line1}, 2: {self.line2}]"
-
+'''
 test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Lines(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
 print(type(test))
 print(test)
 if not test:
     print('keine geometrie')
 #print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))
+
+'''
