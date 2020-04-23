@@ -7,8 +7,8 @@ class Point:
         self.y = y
         self.timestamp = timestamp
 
-    def __str__(self):
-        return f"Point:[X:{self.x}, Y: {self.y}, TimeStamp: {localtime(self.timestamp)}]"
+    def __repr__(self):
+        return f"Point:[X:{self.x}, Y: {self.y}, TimeStamp: {self.timestamp}]"
 
 
 class Linestring:
@@ -56,7 +56,7 @@ class Crosspoint:
         self.line1 = line1
         self.line2 = line2
 
-    def __str__(self):
+    def __repr__(self):
         return f"Crosspoint[{self.point}, 1: {self.line1}, 2: {self.line2}]"
 
 class Crossarea:
@@ -65,14 +65,16 @@ class Crossarea:
         self.line1 = line1
         self.line2 = line2
 
-    def __str__(self):
+    def __repr__(self):
         return f"Crossarea[{self.polygon}, 1: {self.line1}, 2: {self.line2}]"
-'''
-test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Lines(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
-print(type(test))
-print(test)
-if not test:
-    print('keine geometrie')
-#print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))
 
-'''
+
+
+
+if __name__ == "__main__":
+    test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Lines(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
+    print(type(test))
+    print(test)
+    if not test:
+        print('keine geometrie')
+    #print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))
