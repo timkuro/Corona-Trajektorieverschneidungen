@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import os, sys
 import arcpy
 from time import strptime, mktime
+import datetime
 
 from Geometries import *
 
@@ -25,20 +26,20 @@ def split_line(input_line, startdate_iso, enddate_iso):
 
     # first timestamp
     old_time = (input_line[1].text)
-    old_time_py = mktime(strptime(old_time, '%Y-%m-%dT%H:%M:%SZ'))
+    old_time_py = datetime.datetime.strptime(old_time, '%Y-%m-%dT%H:%M:%SZ')
     # first coordinate
     old_coordinate = (input_line[2].text).split(" ")
     # merge time and coordinate to point
     old_point = Point(old_coordinate[0].replace('.', ','), old_coordinate[1].replace('.', ','), old_time_py)
 
-    startdate_py = mktime(strptime(startdate_iso, '%Y-%m-%dT%H:%M:%SZ'))
-    enddate_py = mktime(strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ'))
+    startdate_py = datetime.datetime.strptime(startdate_iso, '%Y-%m-%dT%H:%M:%SZ')
+    enddate_py = datetime.datetime.strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ')
 
     for i in range(3,len(input_line), 2):
         '''print(i)
         print(str(input_line[i].text) + " " + str(input_line[i+1].text))'''
         time_iso = (input_line[i].text)
-        time_py = mktime(strptime(time_iso, '%Y-%m-%dT%H:%M:%SZ'))
+        time_py = datetime.datetime.strptime(time_iso, '%Y-%m-%dT%H:%M:%SZ')
         coordinate = (input_line[i+1].text).split(" ")
         point = Point(coordinate[0].replace('.', ','), coordinate[1].replace('.', ','), time_py)
 
@@ -102,7 +103,7 @@ def intersect_geom(linestring_1, linestring_2):
                     if line in lines_set_2:
                         try:
                             cross_area = trace.intersect_Buffer(line)
-                            result.add(cross_area)
+                            result.append(cross_area)
                         except:
                             continue
                     #else: "Linie aus SSS ist aus der gleichen Menge wie Trace")
@@ -110,7 +111,7 @@ def intersect_geom(linestring_1, linestring_2):
                     if line in lines_set_1:
                         try:
                             cross_area = trace.intersect_Buffer(line)
-                            result.add(cross_area)
+                            result.append(cross_area)
                         except:
                             continue
             sss.add(trace)
