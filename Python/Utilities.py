@@ -8,6 +8,8 @@ from time import strptime, mktime
 from Geometries import *
 
 arcpy.env.overwriteOutput = True
+arcpy.env.outputCoordinateSystem = arcpy.SpatialReference(25832)
+arcpy.env.geographicTransformations = "ETRS_1989_To_WGS84"
 
 # reads the kml file and prepares data for further operations
 def read_kml_line(path):
@@ -121,7 +123,7 @@ def intersect_time(crosspoints):
 def convert_linestring_to_shapefile(list_linestring, path, dataname):
     if arcpy.Exists(path + "\\" + dataname + ".shp"):
         arcpy.management.Delete(path + "\\" + dataname + ".shp")
-    arcpy.management.CreateFeatureclass(path, dataname + ".shp", "Polyline", spatial_reference="4326")
+    arcpy.management.CreateFeatureclass(path, dataname + ".shp", "Polyline")
     arcpy.management.AddField(path + "\\" + dataname + ".shp", "starttime", "TEXT")
     arcpy.management.AddField(path + "\\" + dataname + ".shp", "endtime", "TEXT")
 
@@ -136,7 +138,7 @@ def convert_linestring_to_shapefile(list_linestring, path, dataname):
 def convert_crossarea_to_shapefile(resultList, path, dataname):
     if arcpy.Exists(path + "\\" + dataname + ".shp"):
         arcpy.management.Delete(path + "\\" + dataname + ".shp")
-    arcpy.management.CreateFeatureclass(path, dataname + ".shp", "Polygon", spatial_reference="4326")
+    arcpy.management.CreateFeatureclass(path, dataname + ".shp", "Polygon")
     arcpy.management.AddField(path + "\\" + dataname + ".shp", "line1_sta", "TEXT")
     arcpy.management.AddField(path + "\\" + dataname + ".shp", "line1_end", "TEXT")
     arcpy.management.AddField(path + "\\" + dataname + ".shp", "line2_sta", "TEXT")
