@@ -72,14 +72,13 @@ def intersect_geom(linestring_1, linestring_2):
         ptl_1.append([line.startpoint, line])
         ptl_1.append([line.endpoint, line])
         lines_set_1.add(line)
-    print(linestring_2)
     # Jeder Punkt bekommt seine Linien zugewiesen
     for line in linestring_2:
         ptl_2.append([line.startpoint, line])
         ptl_2.append([line.endpoint, line])
         lines_set_2.add(line)
 
-    ptl_gesamt = ptl_1.extend(ptl_2)
+    ptl_1.extend(ptl_2)
     ptl_sorted = sorted(ptl_1, key=lambda list_element: list_element[0].x)
 
     # Sortierung nach der x-Komponente
@@ -115,11 +114,25 @@ def intersect_geom(linestring_1, linestring_2):
                         except:
                             continue
             sss.add(trace)
-    #print(result)
     return result
 
-def intersect_time(crosspoints):
-    pass
+def intersect_time(crossareas):
+    result = list()
+
+    for crossarea in crossareas:
+        line1start = crossarea.line1.startpoint.timestamp
+        line1end = crossarea.line1.endpoint.timestamp
+        line2start = crossarea.line2.startpoint.timestamp
+        line2end = crossarea.line2.endpoint.timestamp
+
+        #Pruefe auf zeitliche Ueberschneidung der Intervalle
+        if (line2start >= line1start and line2start <= line1end) or (line2end >= line1start and line2end <= line1end) or \
+            (line1start >= line2start and line1start <= line2end) or (line1end >= line2start and line1end <= line2end):
+            result.append(crossarea)
+
+    return result
+
+
 
 def convert_linestring_to_shapefile(list_linestring, path, dataname):
     if arcpy.Exists(path + "\\" + dataname + ".shp"):
@@ -157,7 +170,7 @@ def convert_crossarea_to_shapefile(resultList, path, dataname):
 
 if __name__ == "__main__":
     path_timmy=r"D:\Uni-Lokal\GI-Projekt Corona\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"
-    path_tommy=r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Thomas_Juli2019.kml"
+    path_tommy=r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Thomas_Juli2019.kml"
     path_kort=r"C:\Users\chris\OneDrive - hs-bochum.de\GI_Projekt_Wytzisk\Standortverlauf_Christian_Juli2019.kml"
 
     if(os.environ['USERNAME'] == "Thomas"):
@@ -171,14 +184,16 @@ if __name__ == "__main__":
     print(export_path)
 
     print(read_kml_line(path))
-    lines1 = split_line(read_kml_line(r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines1, r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", "Standortverlauf_Tim_Juli2019")
+    lines1 = split_line(read_kml_line(r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
+    convert_linestring_to_shapefile(lines1, r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", "Standortverlauf_Tim_Juli2019")
     print(lines1)
 
-    lines2 = split_line(read_kml_line(r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines2, r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", "Splittet_Lines_MonsieurKorti")
+    lines2 = split_line(read_kml_line(r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
+    convert_linestring_to_shapefile(lines2, r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", "Splittet_Lines_MonsieurKorti")
     print(lines2)
 
-    result = intersect_geom(lines1, lines2)
+    result_geom = intersect_geom(lines1, lines2)
 
-    convert_crossarea_to_shapefile(result, r"C:\Users\Thomas\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", export_path[-1][:-4])
+    result_time = intersect_time(result_geom)
+
+    convert_crossarea_to_shapefile(result_geom, r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", export_path[-1][:-4])
