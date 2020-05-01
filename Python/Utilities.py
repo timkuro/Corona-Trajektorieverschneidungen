@@ -1,5 +1,4 @@
 # coding=utf-8
-from osgeo import ogr
 import xml.etree.ElementTree as ET
 import os, sys
 from time import strptime, mktime
