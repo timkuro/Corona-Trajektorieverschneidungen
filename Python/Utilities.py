@@ -169,9 +169,9 @@ def convert_crossarea_to_shapefile(resultList, path, dataname):
 
 
 if __name__ == "__main__":
-    path_timmy=r"D:\Uni-Lokal\GI-Projekt Corona\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"
-    path_tommy=r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Thomas_Juli2019.kml"
-    path_kort=r"C:\Users\chris\OneDrive - hs-bochum.de\GI_Projekt_Wytzisk\Standortverlauf_Christian_Juli2019.kml"
+    path_timmy=r"C:\Users\Tim\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
+    path_tommy=r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
+    path_kort=r"C:\Users\chris\OneDrive - hs-bochum.de\GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
 
     if(os.environ['USERNAME'] == "Thomas"):
         path = path_tommy
@@ -182,16 +182,16 @@ if __name__ == "__main__":
 
     export_path = path.split("\\")
 
-    lines1 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])][:-1], "Standortverlauf_Tim_Juli2019")
+    lines1 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
+    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019")
     print(lines1)
 
-    lines2 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])][:-1], "Splittet_Lines_MonsieurKorti")
+    lines2 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
+    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019")
     print(lines2)
 
     result_geom = intersect_geom(lines1, lines2)
 
     result_time = intersect_time(result_geom)
 
-    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])][:-1], export_path[-1][:-4])
+    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])] + r"Ergebnisse\Schnitt_Zeitlich", "time_intersection_tim_christian")
