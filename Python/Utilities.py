@@ -181,19 +181,17 @@ if __name__ == "__main__":
         path = path_kort
 
     export_path = path.split("\\")
-    print(export_path)
 
-    print(read_kml_line(path))
-    lines1 = split_line(read_kml_line(r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines1, r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", "Standortverlauf_Tim_Juli2019")
+    lines1 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
+    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])][:-1], "Standortverlauf_Tim_Juli2019")
     print(lines1)
 
-    lines2 = split_line(read_kml_line(r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines2, r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", "Splittet_Lines_MonsieurKorti")
+    lines2 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
+    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])][:-1], "Splittet_Lines_MonsieurKorti")
     print(lines2)
 
     result_geom = intersect_geom(lines1, lines2)
 
     result_time = intersect_time(result_geom)
 
-    convert_crossarea_to_shapefile(result_geom, r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk", export_path[-1][:-4])
+    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])][:-1], export_path[-1][:-4])
