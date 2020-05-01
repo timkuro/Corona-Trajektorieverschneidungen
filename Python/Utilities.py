@@ -2,15 +2,11 @@
 
 import xml.etree.ElementTree as ET
 import os, sys
-import arcpy
 from time import strptime, mktime
 import datetime
-
+from osgeo import ogr
 from Geometries import *
 
-arcpy.env.overwriteOutput = True
-arcpy.env.outputCoordinateSystem = arcpy.SpatialReference(25832)
-arcpy.env.geographicTransformations = "ETRS_1989_To_WGS84"
 
 # reads the kml file and prepares data for further operations
 def read_kml_line(path):
@@ -133,7 +129,7 @@ def intersect_time(crossareas):
     return result
 
 
-
+'''
 def convert_linestring_to_shapefile(list_linestring, path, dataname):
     if arcpy.Exists(path + "\\" + dataname + ".shp"):
         arcpy.management.Delete(path + "\\" + dataname + ".shp")
@@ -148,7 +144,8 @@ def convert_linestring_to_shapefile(list_linestring, path, dataname):
             polyline = arcpy.Polyline(arcpy.Array([arcpy.Point(linestring.startpoint.x, linestring.startpoint.y), arcpy.Point(linestring.endpoint.x, linestring.endpoint.y)]), arcpy.SpatialReference(4326))
             print(polyline.length)
             insertCursor.insertRow([polyline, line_start, line_end])
-
+'''
+'''
 def convert_crossarea_to_shapefile(resultList, path, dataname):
     if arcpy.Exists(path + "\\" + dataname + ".shp"):
         arcpy.management.Delete(path + "\\" + dataname + ".shp")
@@ -165,6 +162,7 @@ def convert_crossarea_to_shapefile(resultList, path, dataname):
             line2_start = cross_area.line2.startpoint.timestamp
             line2_end = cross_area.line2.endpoint.timestamp
             insertCursor.insertRow([cross_area.polygon, line1_start, line1_end, line2_start, line2_end])
+'''
 
 
 
@@ -183,15 +181,15 @@ if __name__ == "__main__":
     export_path = path.split("\\")
 
     lines1 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Tim_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019")
+    #convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019")
     print(lines1)
 
     lines2 = split_line(read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Christian_Juli2019.kml"), '2019-07-01T00:00:00Z', '2019-07-02T00:00:00Z')
-    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019")
+    #convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019")
     print(lines2)
 
     result_geom = intersect_geom(lines1, lines2)
 
     result_time = intersect_time(result_geom)
 
-    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])] + r"Ergebnisse\Schnitt_Zeitlich", "time_intersection_tim_christian")
+    #convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])] + r"Ergebnisse\Schnitt_Zeitlich", "time_intersection_tim_christian")
