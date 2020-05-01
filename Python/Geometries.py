@@ -46,7 +46,7 @@ class Linestring:
         #self_arcpy =  arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]), arcpy.SpatialReference(4326))
         #other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]), arcpy.SpatialReference(4326))
 
-        bufferDistance = 2
+        bufferDistance = (10*360)/40000000
         self_buffer = self_ogr.Buffer(bufferDistance)
         #print(self_buffer.ExportToWkt())
         other_buffer = other_ogr.Buffer(bufferDistance)
