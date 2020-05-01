@@ -26,7 +26,7 @@ def split_line(input_line, startdate_iso, enddate_iso):
     # first coordinate
     old_coordinate = (input_line[2].text).split(" ")
     # merge time and coordinate to point
-    old_point = Point(old_coordinate[0].replace('.', ','), old_coordinate[1].replace('.', ','), old_time_py)
+    old_point = Point(float(old_coordinate[0]), float(old_coordinate[1]), old_time_py)
 
     startdate_py = datetime.datetime.strptime(startdate_iso, '%Y-%m-%dT%H:%M:%SZ')
     enddate_py = datetime.datetime.strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ')
@@ -37,7 +37,7 @@ def split_line(input_line, startdate_iso, enddate_iso):
         time_iso = (input_line[i].text)
         time_py = datetime.datetime.strptime(time_iso, '%Y-%m-%dT%H:%M:%SZ')
         coordinate = (input_line[i+1].text).split(" ")
-        point = Point(coordinate[0].replace('.', ','), coordinate[1].replace('.', ','), time_py)
+        point = Point(float(coordinate[0]), float(coordinate[1]), time_py)
 
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
             list_Linestrings.append(Linestring(old_point, point))
@@ -101,6 +101,7 @@ def intersect_geom(linestring_1, linestring_2):
                             result.append(cross_area)
                         except:
                             continue
+
                     #else: "Linie aus SSS ist aus der gleichen Menge wie Trace")
                 else:
                     if line in lines_set_1:
@@ -109,6 +110,7 @@ def intersect_geom(linestring_1, linestring_2):
                             result.append(cross_area)
                         except:
                             continue
+
             sss.add(trace)
     return result
 
@@ -163,7 +165,6 @@ def convert_crossarea_to_shapefile(resultList, path, dataname):
             line2_end = cross_area.line2.endpoint.timestamp
             insertCursor.insertRow([cross_area.polygon, line1_start, line1_end, line2_start, line2_end])
 '''
-
 
 
 if __name__ == "__main__":

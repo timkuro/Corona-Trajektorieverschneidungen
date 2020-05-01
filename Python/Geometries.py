@@ -35,12 +35,23 @@ class Linestring:
         Berechnet zu jeder Linie einen Puffer und verschneidet diese
     '''
     def intersect_Buffer(self, other_line):
-        self_arcpy =  arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]), arcpy.SpatialReference(4326))
-        other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]), arcpy.SpatialReference(4326))
+        self_ogr = ogr.Geometry(ogr.wkbLineString)
+        self_ogr.AddPoint(self.startpoint.x, self.startpoint.y)
+        self_ogr.AddPoint(self.endpoint.x, self.endpoint.y)
 
-        self_buffer = self_arcpy.buffer(0.002)
-        other_buffer = other_arcpy.buffer(0.002)
-        intersect_buffer = self_buffer.intersect(other_buffer, 4)
+        other_ogr = ogr.Geometry(ogr.wkbLineString)
+        other_ogr.AddPoint(other_line.startpoint.x, other_line.startpoint.y)
+        other_ogr.AddPoint(other_line.endpoint.x, other_line.endpoint.y)
+
+        #self_arcpy =  arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]), arcpy.SpatialReference(4326))
+        #other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]), arcpy.SpatialReference(4326))
+
+        bufferDistance = 2
+        self_buffer = self_ogr.Buffer(bufferDistance)
+        #print(self_buffer.ExportToWkt())
+        other_buffer = other_ogr.Buffer(bufferDistance)
+        intersect_buffer = self_buffer.Intersection(other_buffer)
+        #print (intersect_buffer.ExportToWkt())
 
         if intersect_buffer:
             cross_area = Crossarea(intersect_buffer, self, other_line)
