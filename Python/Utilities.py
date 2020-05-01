@@ -31,8 +31,6 @@ def split_line(input_line, startdate_iso, enddate_iso):
     enddate_py = datetime.datetime.strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ')
 
     for i in range(3,len(input_line), 2):
-        '''print(i)
-        print(str(input_line[i].text) + " " + str(input_line[i+1].text))'''
         time_iso = (input_line[i].text)
         time_py = datetime.datetime.strptime(time_iso, '%Y-%m-%dT%H:%M:%SZ')
         coordinate = (input_line[i+1].text).split(" ")
@@ -41,12 +39,8 @@ def split_line(input_line, startdate_iso, enddate_iso):
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
             list_Linestrings.append(Linestring(old_point, point))
 
-
         old_point = point
 
-    '''print (list_Linestrings)
-    for row in list_Linestrings:
-        print(row)'''
     return list_Linestrings
 
 def intersect_geom(linestring_1, linestring_2):
@@ -80,10 +74,6 @@ def intersect_geom(linestring_1, linestring_2):
     # Sortierung nach der x-Komponente
     # ptl_1 = sorted(ptl_1, key=lambda list_element: list_element[0].x)
     # ptl_2 = sorted(ptl_2, key=lambda list_element: list_element[0].x)
-
-    '''# Nur Ausgabe
-    for point in ptl_sorted:
-        print(point[0])'''
 
     # Jeder Punkt der sortierten Punktliste wird durchlaufen
     for point in ptl_sorted:
