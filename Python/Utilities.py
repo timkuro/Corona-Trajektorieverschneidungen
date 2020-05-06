@@ -43,7 +43,7 @@ def split_line(input_line, startdate_iso, enddate_iso):
 
     return list_Linestrings
 
-def intersect_geom(linestring_1, linestring_2):
+def intersect_geom(linestring_1, linestring_2, distance):
     #Vorbereitungen
     #Ergebnisobjekt bilden
     result = list();
@@ -87,7 +87,7 @@ def intersect_geom(linestring_1, linestring_2):
                 if trace in lines_set_1:
                     if line in lines_set_2:
                         try:
-                            cross_area = trace.intersect_Buffer(line)
+                            cross_area = trace.intersect_Buffer(line, distance=distance)
                             result.append(cross_area)
                         except:
                             continue
@@ -96,7 +96,7 @@ def intersect_geom(linestring_1, linestring_2):
                 else:
                     if line in lines_set_1:
                         try:
-                            cross_area = trace.intersect_Buffer(line)
+                            cross_area = trace.intersect_Buffer(line, distance=distance)
                             result.append(cross_area)
                         except:
                             continue
@@ -104,14 +104,14 @@ def intersect_geom(linestring_1, linestring_2):
             sss.add(trace)
     return result
 
-def intersect_time(crossareas):
+def intersect_time(crossareas, delta):
     result = list()
 
     for crossarea in crossareas:
-        line1start = crossarea.line1.startpoint.timestamp
-        line1end = crossarea.line1.endpoint.timestamp
-        line2start = crossarea.line2.startpoint.timestamp
-        line2end = crossarea.line2.endpoint.timestamp
+        line1start = crossarea.line1.startpoint.timestamp - delta
+        line1end = crossarea.line1.endpoint.timestamp + delta
+        line2start = crossarea.line2.startpoint.timestamp - delta
+        line2end = crossarea.line2.endpoint.timestamp + delta
 
         #Pruefe auf zeitliche Ueberschneidung der Intervalle
         if (line2start >= line1start and line2start <= line1end) or (line2end >= line1start and line2end <= line1end) or \
@@ -249,29 +249,43 @@ if __name__ == "__main__":
     export_path = path.split("\\")
 
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Lese erste Datei")
+
     datei1 = read_kml_line(path[:-len(export_path[-1])] + "Rohdaten\Tim_Standortverlauf\Takeout\Standortverlauf\Standortverlauf.kml")
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(len(datei1) / 2 - 1) + " Punkte")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Splitte erste Datei")
-    lines1 = split_line(datei1, '2019-07-01T00:00:00Z', '2019-07-15T00:00:00Z')
+
+    lines1 = split_line(datei1, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z')
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Linien: " + str(len(lines1)) + " Linien")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Exportiere erste gesplittete Datei")
+
     convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019_ogr")
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Erste Linie gesplittet")
 
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Lese zweite Datei")
+
     datei2 = read_kml_line(path[:-len(export_path[-1])] + "Rohdaten\Christian_Standortverlauf\Takeout\Standortverlauf\Standortverlauf.kml")
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(len(datei2)/2 - 1) + " Punkte")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Splitte zweite Datei")
-    lines2 = split_line(datei2, '2019-07-01T00:00:00Z', '2019-07-15T00:00:00Z')
+
+    lines2 = split_line(datei2, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z')
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Linien: " + str(len(lines2)) + " Linien")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Exportiere zweite gesplittete Datei")
+
     convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019_ogr")
+
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Zweite Linie gesplittet")
 
-    result_geom = intersect_geom(lines1, lines2)
+
+    result_geom = intersect_geom(lines1, lines2, distance=5)
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Geometrische Intersection")
-    result_time = intersect_time(result_geom)
+    result_time = intersect_time(result_geom, delta=datetime.timedelta(minutes=15))
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Zeitliche Intersection")
 
-    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])] + r"Ergebnisse\Schnitt_Zeitlich", "time_intersection_tim_christian")
+    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])] + r"Ergebnisse\Schnitt_Zeitlich", "time_intersection_tim_christian_abgabe")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Ergebnis geschrieben")
