@@ -99,7 +99,7 @@ def intersect_geom(linestring_1, linestring_2, distance):
                 if trace in lines_set_infected:
                     if line in lines_set_healthy:
                         try:
-                            cross_area = trace.intersect_Buffer(line, distance=distance)
+                            cross_area = trace.intersect_Buffer_line(line, distance=distance)
                             result.append(cross_area)
                         except:
                             continue
@@ -108,7 +108,7 @@ def intersect_geom(linestring_1, linestring_2, distance):
                 else:
                     if line in lines_set_infected:
                         try:
-                            cross_area = line.intersect_Buffer(trace, distance=distance)
+                            cross_area = line.intersect_Buffer_line(trace, distance=distance)
                             result.append(cross_area)
                         except:
                             continue
@@ -267,6 +267,6 @@ def convert_crossline_to_shapefile(resultList, path, dataname):
         feature.SetField("line2_end", cross_line.line2.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
         # Set the feature geometry using the polygon
-        feature.SetGeometry(cross_line.polygon)
+        feature.SetGeometry(cross_line.geometry)
         # Create the feature in the layer (shapefile)
         layer.CreateFeature(feature)

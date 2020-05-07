@@ -74,9 +74,7 @@ class Linestring:
         other_ogr.AddPoint(other_line.startpoint.x, other_line.startpoint.y)
         other_ogr.AddPoint(other_line.endpoint.x, other_line.endpoint.y)
 
-        print(self_buffer.ExportToWkt())
         intersect_buffer_line = self_buffer.Intersection(other_ogr)
-        print (intersect_buffer_line.ExportToWkt())
 
         if intersect_buffer_line:
             cross_area = Cross_Geometry(intersect_buffer_line, self, other_line)
