@@ -54,7 +54,32 @@ class Linestring:
         #print (intersect_buffer.ExportToWkt())
 
         if intersect_buffer:
-            cross_area = Crossarea(intersect_buffer, self, other_line)
+            cross_area = Cross_Geometry(intersect_buffer, self, other_line)
+            return cross_area
+        else:
+            raise Exception("No intersection found")
+
+    '''
+            Berechnet zu jeder Linie einen Puffer und verschneidet diese
+    '''
+    def intersect_Buffer_line(self, other_line, distance):
+        self_ogr = ogr.Geometry(ogr.wkbLineString)
+        self_ogr.AddPoint(self.startpoint.x, self.startpoint.y)
+        self_ogr.AddPoint(self.endpoint.x, self.endpoint.y)
+
+        bufferDistance = (distance * 360) / 40000000
+        self_buffer = self_ogr.Buffer(bufferDistance)
+
+        other_ogr = ogr.Geometry(ogr.wkbLineString)
+        other_ogr.AddPoint(other_line.startpoint.x, other_line.startpoint.y)
+        other_ogr.AddPoint(other_line.endpoint.x, other_line.endpoint.y)
+
+        print(self_buffer.ExportToWkt())
+        intersect_buffer_line = self_buffer.Intersection(other_ogr)
+        print (intersect_buffer_line.ExportToWkt())
+
+        if intersect_buffer_line:
+            cross_area = Cross_Geometry(intersect_buffer_line, self, other_line)
             return cross_area
         else:
             raise Exception("No intersection found")
@@ -71,9 +96,9 @@ class Crosspoint:
     def __repr__(self):
         return f"Crosspoint[{self.point}, 1: {self.line1}, 2: {self.line2}]"
 
-class Crossarea:
-    def __init__(self, polygon, line1, line2):
-        self.polygon = polygon
+class Cross_Geometry:
+    def __init__(self, geometry, line1, line2):
+        self.geometry = geometry
         self.line1 = line1
         self.line2 = line2
 

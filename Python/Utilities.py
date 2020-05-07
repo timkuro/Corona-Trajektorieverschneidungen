@@ -1,4 +1,5 @@
 # coding=utf-8
+import math
 import xml.etree.ElementTree as ET
 import os, sys
 from time import strptime, mktime
@@ -29,19 +30,30 @@ def split_line(input_line, startdate_iso, enddate_iso):
 
     startdate_py = datetime.datetime.strptime(startdate_iso, '%Y-%m-%dT%H:%M:%SZ')
     enddate_py = datetime.datetime.strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ')
-
+    k = 0
     for i in range(3,len(input_line), 2):
         time_iso = (input_line[i].text)
         time_py = datetime.datetime.strptime(time_iso, '%Y-%m-%dT%H:%M:%SZ')
         coordinate = (input_line[i+1].text).split(" ")
         point = Point(float(coordinate[0]), float(coordinate[1]), time_py)
-
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
-            list_Linestrings.append(Linestring(old_point, point))
+            distance = (math.sqrt((point.x-old_point.x)**2 + (point.y-old_point.y)**2)/360)*40000000
+            time_delta = (point.timestamp-old_point.timestamp).total_seconds()
+            if time_delta >0 and distance < 5000:
+                velocity = distance/time_delta
+                if velocity < 50: # [m/s]
+                    list_Linestrings.append(Linestring(old_point, point))
+                else:
+                    k = k+1
+                    #print(f"{k}. Ausreißer")
 
         old_point = point
 
     return list_Linestrings
+
+
+
+
 
 def intersect_geom(linestring_1, linestring_2, distance):
     #Vorbereitungen
@@ -54,19 +66,19 @@ def intersect_geom(linestring_1, linestring_2, distance):
     ptl_1 = list()
     ptl_2 = list()
 
-    lines_set_1 = set()
-    lines_set_2 = set()
+    lines_set_infected = set()
+    lines_set_healthy = set()
 
     # Jeder Punkt bekommt seine Linien zugewiesen
     for line in linestring_1:
         ptl_1.append([line.startpoint, line])
         ptl_1.append([line.endpoint, line])
-        lines_set_1.add(line)
+        lines_set_infected.add(line)
     # Jeder Punkt bekommt seine Linien zugewiesen
     for line in linestring_2:
         ptl_2.append([line.startpoint, line])
         ptl_2.append([line.endpoint, line])
-        lines_set_2.add(line)
+        lines_set_healthy.add(line)
 
     ptl_1.extend(ptl_2)
     ptl_sorted = sorted(ptl_1, key=lambda list_element: list_element[0].x)
@@ -84,8 +96,8 @@ def intersect_geom(linestring_1, linestring_2, distance):
         else:
             for line in sss:
                 # Ermitteln ob Schnittpunkt vorhanden ist
-                if trace in lines_set_1:
-                    if line in lines_set_2:
+                if trace in lines_set_infected:
+                    if line in lines_set_healthy:
                         try:
                             cross_area = trace.intersect_Buffer(line, distance=distance)
                             result.append(cross_area)
@@ -94,9 +106,9 @@ def intersect_geom(linestring_1, linestring_2, distance):
 
                     #else: "Linie aus SSS ist aus der gleichen Menge wie Trace")
                 else:
-                    if line in lines_set_1:
+                    if line in lines_set_infected:
                         try:
-                            cross_area = trace.intersect_Buffer(line, distance=distance)
+                            cross_area = line.intersect_Buffer(trace, distance=distance)
                             result.append(cross_area)
                         except:
                             continue
@@ -131,6 +143,7 @@ def convert_linestring_to_shapefile(list_linestring, path, dataname):
     # create the spatial reference, WGS84
     '''srs = osr.SpatialReference()
     srs.ImportFromEPSG(4326)'''
+
     # Create Layer
     layer = data_source.CreateLayer("linestrings", None, ogr.wkbLineString)
 
@@ -216,76 +229,44 @@ def convert_crossarea_to_shapefile(resultList, path, dataname):
         # Create the feature in the layer (shapefile)
         layer.CreateFeature(feature)
 
-    '''
-    if arcpy.Exists(path + "\\" + dataname + ".shp"):
-        arcpy.management.Delete(path + "\\" + dataname + ".shp")
-    arcpy.management.CreateFeatureclass(path, dataname + ".shp", "Polygon")
-    arcpy.management.AddField(path + "\\" + dataname + ".shp", "line1_sta", "TEXT")
-    arcpy.management.AddField(path + "\\" + dataname + ".shp", "line1_end", "TEXT")
-    arcpy.management.AddField(path + "\\" + dataname + ".shp", "line2_sta", "TEXT")
-    arcpy.management.AddField(path + "\\" + dataname + ".shp", "line2_end", "TEXT")
 
-    with arcpy.da.InsertCursor(path + "\\" + dataname + ".shp", ["SHAPE@", "line1_sta", "line1_end", "line2_sta", "line2_end"]) as insertCursor:
-        for cross_area in resultList:
-            line1_start = cross_area.line1.startpoint.timestamp
-            line1_end = cross_area.line1.endpoint.timestamp
-            line2_start = cross_area.line2.startpoint.timestamp
-            line2_end = cross_area.line2.endpoint.timestamp
-            insertCursor.insertRow([cross_area.polygon, line1_start, line1_end, line2_start, line2_end])
-    '''
+def convert_crossline_to_shapefile(resultList, path, dataname):
+    # set up the shapefile driver
+    driver = ogr.GetDriverByName("ESRI Shapefile")
 
-if __name__ == "__main__":
-    path_timmy=r"C:\Users\Tim\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
-    path_tommy=r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
-    path_kort=r"C:\Users\chris\OneDrive - hs-bochum.de\GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
+    # create the data source
+    data_source = driver.CreateDataSource(path + "\\" + dataname + ".shp")
 
-    if(os.environ['USERNAME'] == "Thomas"):
-        path = path_tommy
-    elif(os.environ['USERNAME'] == "Tim"):
-        path = path_timmy
-    elif(os.environ['USERNAME'] == "chris"):
-        path = path_kort
+    # create the spatial reference, WGS84
+    '''srs = osr.SpatialReference()
+    srs.ImportFromEPSG(4326)'''
+    # Create Layer
+    layer = data_source.CreateLayer("polygons", None, ogr.wkbLineString)
 
-    export_path = path.split("\\")
+    # Add the fields
+    starttime = ogr.FieldDefn("line1_sta", ogr.OFTString)
+    starttime.SetWidth(32)
+    layer.CreateField(starttime)
+    endtime = ogr.FieldDefn("line1_end", ogr.OFTString)
+    endtime.SetWidth(32)
+    layer.CreateField(endtime)
+    starttime = ogr.FieldDefn("line2_sta", ogr.OFTString)
+    starttime.SetWidth(32)
+    layer.CreateField(starttime)
+    endtime = ogr.FieldDefn("line2_end", ogr.OFTString)
+    endtime.SetWidth(32)
+    layer.CreateField(endtime)
 
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Lese erste Datei")
+    for cross_line in resultList:
+        feature = ogr.Feature(layer.GetLayerDefn())
 
-    datei1 = read_kml_line(path[:-len(export_path[-1])] + "Rohdaten\Tim_Standortverlauf\Takeout\Standortverlauf\Standortverlauf.kml")
+        # Set the attributes using the values from the delimited text file
+        feature.SetField("line1_sta", cross_line.line1.startpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        feature.SetField("line1_end", cross_line.line1.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        feature.SetField("line2_sta", cross_line.line2.startpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        feature.SetField("line2_end", cross_line.line2.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(len(datei1) / 2 - 1) + " Punkte")
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Splitte erste Datei")
-
-    lines1 = split_line(datei1, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z')
-
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Linien: " + str(len(lines1)) + " Linien")
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Exportiere erste gesplittete Datei")
-
-    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019_ogr")
-
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Erste Linie gesplittet")
-
-
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Lese zweite Datei")
-
-    datei2 = read_kml_line(path[:-len(export_path[-1])] + "Rohdaten\Christian_Standortverlauf\Takeout\Standortverlauf\Standortverlauf.kml")
-
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(len(datei2)/2 - 1) + " Punkte")
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Splitte zweite Datei")
-
-    lines2 = split_line(datei2, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z')
-
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Linien: " + str(len(lines2)) + " Linien")
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Exportiere zweite gesplittete Datei")
-
-    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019_ogr")
-
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Zweite Linie gesplittet")
-
-
-    result_geom = intersect_geom(lines1, lines2, distance=5)
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Geometrische Intersection")
-    result_time = intersect_time(result_geom, delta=datetime.timedelta(minutes=15))
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Zeitliche Intersection")
-
-    convert_crossarea_to_shapefile(result_time, path[:-len(export_path[-1])] + r"Ergebnisse\Schnitt_Zeitlich", "time_intersection_tim_christian_abgabe")
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Ergebnis geschrieben")
+        # Set the feature geometry using the polygon
+        feature.SetGeometry(cross_line.polygon)
+        # Create the feature in the layer (shapefile)
+        layer.CreateFeature(feature)
