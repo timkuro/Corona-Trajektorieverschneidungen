@@ -103,9 +103,6 @@ class Cross_Geometry:
     def __repr__(self):
         return f"Crossarea[{self.polygon}, 1: {self.line1}, 2: {self.line2}]"
 
-
-
-
 if __name__ == "__main__":
     test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Lines(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
     print(type(test))

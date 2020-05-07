@@ -51,8 +51,32 @@ def split_line(input_line, startdate_iso, enddate_iso):
 
     return list_Linestrings
 
+def create_bounding_box(linestrings):
+    bbox = {'xMin':linestrings[0].startpoint.x, 'xMax':linestrings[0].startpoint.x, 'yMin':linestrings[0].startpoint.y, 'yMax':linestrings[0].startpoint.y}
+    for line in linestrings:
+        if line.endpoint.x < bbox['xMin']:
+            bbox['xMin'] = line.endpoint.x
+        elif line.endpoint.x > bbox['xMax']:
+            bbox['xMax'] = line.endpoint.x
+        if line.endpoint.y < bbox['yMin']:
+            bbox['yMin'] = line.endpoint.y
+        elif line.endpoint.y > bbox['yMax']:
+            bbox['yMax'] = line.endpoint.y
+    return bbox
 
+def intersect_bounding_box(linestrings, bbox):
+    result = list()
+    for line in linestrings:
+        linestart_X = line.startpoint.x
+        lineend_X = line.endpoint.x
+        linestart_Y = line.startpoint.y
+        lineend_Y = line.endpoint.y
 
+        if ((bbox['xMax'] > linestart_X > bbox['xMin']) and (bbox['yMax'] > linestart_Y > bbox['yMin'])) or \
+                ((bbox['xMax'] > lineend_X > bbox['xMin']) and (bbox['yMax'] > lineend_Y > bbox['yMin'])):
+            result.append(line)
+
+    return result
 
 
 def intersect_geom(linestring_1, linestring_2, distance):
