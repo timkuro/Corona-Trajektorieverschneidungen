@@ -16,7 +16,7 @@ class Linestring:
         self.endpoint = endpoint
 
     '''
-        Verschneidet Linien
+        intersects lines
     '''
     '''
     def intersect_Lines(self, other_line):
@@ -31,10 +31,14 @@ class Linestring:
             raise Exception("No intersection found")
     '''
 
-    '''
-        Berechnet zu jeder Linie einen Puffer und verschneidet diese
-    '''
     def intersect_Buffer(self, other_line, distance):
+        '''
+        Intersects two buffers
+
+        :param other_line: line to be intersected
+        :param distance: buffer size
+        :return: crossing area
+        '''
         self_ogr = ogr.Geometry(ogr.wkbLineString)
         self_ogr.AddPoint(self.startpoint.x, self.startpoint.y)
         self_ogr.AddPoint(self.endpoint.x, self.endpoint.y)
@@ -59,10 +63,13 @@ class Linestring:
         else:
             raise Exception("No intersection found")
 
-    '''
-            Berechnet zu jeder Linie einen Puffer und verschneidet diese
-    '''
     def intersect_Buffer_line(self, other_line, distance):
+        '''
+        Intersects a line with a buffer of an other line
+        :param other_line:
+        :param distance:
+        :return:
+        '''
         self_ogr = ogr.Geometry(ogr.wkbLineString)
         self_ogr.AddPoint(self.startpoint.x, self.startpoint.y)
         self_ogr.AddPoint(self.endpoint.x, self.endpoint.y)
