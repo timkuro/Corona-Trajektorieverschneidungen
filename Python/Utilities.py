@@ -14,7 +14,7 @@ def read_kml_line(path):
     Reads the input kml file and prepares data for further operations
 
     :param path: file path to kml file
-
+    :return: Track from KML File
     '''
 
     tree = ET.parse(path)
@@ -73,9 +73,9 @@ def split_line(input_line, startdate_iso, enddate_iso):
 
 def create_bounding_box(linestrings):
     '''
-    Calculates a bounding box of one linestring
-    :param linestrings: input linestring (splittet line)
-    :return: bbox as list with corner coordinates
+    Calculates a bounding box of the linestrings
+    :param linestrings: input linestrings (splittet line)
+    :return: bbox as dictionary with corner coordinates
     '''
     bbox = {'xMin':linestrings[0].startpoint.x, 'xMax':linestrings[0].startpoint.x, 'yMin':linestrings[0].startpoint.y, 'yMax':linestrings[0].startpoint.y}
     # search the border points
@@ -90,15 +90,15 @@ def create_bounding_box(linestrings):
             bbox['yMax'] = line.endpoint.y
     return bbox
 
-def intersect_bounding_box(linestring, bbox):
+def intersect_bounding_box(linestrings, bbox):
     '''
-    Intersects bounding boxes of two linestrings to put less lines into the sss
-    :param linestring: input linestring
+    Return linestrings intersected by the bbox
+    :param linestrings: input linestrings
     :param bbox: bbox of other linestring
-    :return: intersected bbox
+    :return: by bbox intersected linestrings
     '''
     result = list()
-    for line in linestring:
+    for line in linestrings:
         linestart_X = line.startpoint.x
         lineend_X = line.endpoint.x
         linestart_Y = line.startpoint.y
@@ -113,16 +113,16 @@ def intersect_bounding_box(linestring, bbox):
 
 def intersect_geom(linestring_1, linestring_2, distance):
     '''
-    Intersects two linestrings with a defined tolerance
+    Intersects two lists of linestrings with a defined tolerance by using a Sweep-Status-Structure(SSS)
 
-    :param linestring_1: input linestring
-    :param linestring_2: input other linestring
+    :param linestring_1: input linestrings
+    :param linestring_2: input other linestrings
     :param distance: tolerance
     :return: geometric intersection
     '''
     #preparation
     #create result object
-    geometric_intersections = list();
+    geometric_intersections = list()
     #sweep status structure
     # sss anlegen
     sss = set()
@@ -250,22 +250,7 @@ def convert_linestring_to_shapefile(list_linestring, path, filename):
         # create the feature in the layer (shapefile)
         layer.CreateFeature(feature)
 
-
-    '''if arcpy.Exists(path + "\\" + dataname + ".shp"):
-        arcpy.management.Delete(path + "\\" + dataname + ".shp")
-    arcpy.management.CreateFeatureclass(path, dataname + ".shp", "Polyline")
-    arcpy.management.AddField(path + "\\" + dataname + ".shp", "starttime", "TEXT")
-    arcpy.management.AddField(path + "\\" + dataname + ".shp", "endtime", "TEXT")
-
-    with arcpy.da.InsertCursor(path + "\\" + dataname + ".shp", ["SHAPE@", "starttime", "endtime"]) as insertCursor:
-        for linestring in list_linestring:
-            line_start = str(linestring.startpoint.timestamp)
-            line_end = str(linestring.endpoint.timestamp)
-            polyline = arcpy.Polyline(arcpy.Array([arcpy.Point(linestring.startpoint.x, linestring.startpoint.y), arcpy.Point(linestring.endpoint.x, linestring.endpoint.y)]), arcpy.SpatialReference(4326))
-            print(polyline.length)
-            insertCursor.insertRow([polyline, line_start, line_end])'''
-
-
+"""
 def convert_crossarea_to_shapefile(area_list, path, filename):
     '''
     Converts a list of areas into a ESRI shapefile
@@ -312,7 +297,7 @@ def convert_crossarea_to_shapefile(area_list, path, filename):
         feature.SetGeometry(cross_area.polygon)
         # create the feature in the layer (shapefile)
         layer.CreateFeature(feature)
-
+"""
 
 def convert_crossline_to_shapefile(lines, path, filename):
     '''

@@ -1,5 +1,6 @@
 from time import localtime
 from osgeo import ogr
+
 class Point:
     def __init__(self, x, y, timestamp):
         self.x = x
@@ -92,6 +93,7 @@ class Linestring:
     def __repr__(self):
         return f"Line:[ {self.startpoint} ,  {self.endpoint} ]"
 
+"""
 class Crosspoint:
     def __init__(self, point, line1, line2):
         self.point = point
@@ -100,6 +102,7 @@ class Crosspoint:
 
     def __repr__(self):
         return f"Crosspoint[{self.point}, 1: {self.line1}, 2: {self.line2}]"
+"""
 
 class Cross_Geometry:
     def __init__(self, geometry, line1, line2):
@@ -108,7 +111,7 @@ class Cross_Geometry:
         self.line2 = line2
 
     def __repr__(self):
-        return f"Crossarea[{self.polygon}, 1: {self.line1}, 2: {self.line2}]"
+        return f"Crossgeometry[{self.polygon}, 1: {self.line1}, 2: {self.line2}]"
 
 if __name__ == "__main__":
     test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Lines(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29"))))
