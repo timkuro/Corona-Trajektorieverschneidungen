@@ -16,25 +16,9 @@ class Linestring:
         self.startpoint = startpoint
         self.endpoint = endpoint
 
-    '''
-        intersects lines
-    '''
-    '''
-    def intersect_Lines(self, other_line):
-        self_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]))
-        other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]))
-        intersect_point = self_arcpy.intersect(other_arcpy, 1)
-
-        if intersect_point:
-            cross_point = Crosspoint(Point(intersect_point.firstPoint.X, intersect_point.firstPoint.Y, None), self, other_line)
-            return cross_point
-        else:
-            raise Exception("No intersection found")
-    '''
-
     def intersect_Buffer(self, other_line, distance):
         '''
-        Intersects two buffers
+        Intersects the buffers two lines
 
         :param other_line: line to be intersected
         :param distance: buffer size
@@ -48,15 +32,11 @@ class Linestring:
         other_ogr.AddPoint(other_line.startpoint.x, other_line.startpoint.y)
         other_ogr.AddPoint(other_line.endpoint.x, other_line.endpoint.y)
 
-        #self_arcpy =  arcpy.Polyline(arcpy.Array([arcpy.Point(self.startpoint.x, self.startpoint.y), arcpy.Point(self.endpoint.x, self.endpoint.y)]), arcpy.SpatialReference(4326))
-        #other_arcpy = arcpy.Polyline(arcpy.Array([arcpy.Point(other_line.startpoint.x, other_line.startpoint.y), arcpy.Point(other_line.endpoint.x, other_line.endpoint.y)]), arcpy.SpatialReference(4326))
-
         bufferDistance = (distance*360)/40000000
         self_buffer = self_ogr.Buffer(bufferDistance)
-        #print(self_buffer.ExportToWkt())
+
         other_buffer = other_ogr.Buffer(bufferDistance)
         intersect_buffer = self_buffer.Intersection(other_buffer)
-        #print (intersect_buffer.ExportToWkt())
 
         if intersect_buffer:
             cross_area = Cross_Geometry(intersect_buffer, self, other_line)
