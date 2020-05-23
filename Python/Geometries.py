@@ -12,7 +12,8 @@ class Point:
 
 
 class Linestring:
-    def __init__(self, startpoint, endpoint):
+    def __init__(self, startpoint, endpoint, personal_id=None):
+        self.personal_id = personal_id
         self.startpoint = startpoint
         self.endpoint = endpoint
 

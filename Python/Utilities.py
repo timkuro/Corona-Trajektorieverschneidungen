@@ -24,7 +24,7 @@ def read_kml_line(path):
     else:
         raise Exception('no track-tag found in KML')
 
-def split_line(input_line, startdate_iso, enddate_iso):
+def split_line(input_line, startdate_iso, enddate_iso, personal_id):
     '''
     Splits the long line into line sections in a defined timeframe adding the time as attribute
 
@@ -62,7 +62,7 @@ def split_line(input_line, startdate_iso, enddate_iso):
                 velocity = distance/time_delta
                 if velocity < 50: # [m/s]
                     # fill output list
-                    list_Linestrings.append(Linestring(old_point, point))
+                    list_Linestrings.append(Linestring(old_point, point, personal_id))
                 #else:
                     # k = k+1
                     #print(f"{k}. Ausreißer")
@@ -232,13 +232,17 @@ def convert_linestring_to_shapefile(list_linestring, path, filename):
     endtime = ogr.FieldDefn("endtime", ogr.OFTString)
     endtime.SetWidth(32)
     layer.CreateField(endtime)
+    pers_id = ogr.FieldDefn("pers_id", ogr.OFTString)
+    pers_id.SetWidth(32)
+    layer.CreateField(pers_id)
 
     for linestring in list_linestring:
         feature = ogr.Feature(layer.GetLayerDefn())
 
-        # set the attributes using the values from the delimited text file
+        # set the attributes
         feature.SetField("starttime", linestring.startpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
         feature.SetField("endtime", linestring.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        feature.SetField("pers_id", str(linestring.personal_id))
 
         # create geometry from linestring object
         line_ogr = ogr.Geometry(ogr.wkbLineString)
@@ -334,6 +338,13 @@ def convert_crossline_to_shapefile(lines, path, filename):
     endtime.SetWidth(32)
     layer.CreateField(endtime)
 
+    infected_id = ogr.FieldDefn("infected", ogr.OFTString)
+    infected_id.SetWidth(32)
+    layer.CreateField(infected_id)
+    healthy_id = ogr.FieldDefn("healthy", ogr.OFTString)
+    healthy_id.SetWidth(32)
+    layer.CreateField(healthy_id)
+
     for cross_line in lines:
         feature = ogr.Feature(layer.GetLayerDefn())
 
@@ -342,6 +353,9 @@ def convert_crossline_to_shapefile(lines, path, filename):
         feature.SetField("line1_end", cross_line.line1.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
         feature.SetField("line2_sta", cross_line.line2.startpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
         feature.SetField("line2_end", cross_line.line2.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
+
+        feature.SetField("infected", str(cross_line.line1.personal_id))
+        feature.SetField("healthy", str(cross_line.line2.personal_id))
 
         # set the feature geometry using the polygon
         feature.SetGeometry(cross_line.geometry)
