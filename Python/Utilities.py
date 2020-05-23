@@ -111,12 +111,12 @@ def intersect_bounding_box(linestrings, bbox):
     return result
 
 
-def intersect_geom(linestring_1, linestring_2, distance):
+def intersect_geom(linestrings_infected, linestrings_healthy, distance):
     '''
     Intersects two lists of linestrings with a defined tolerance by using a Sweep-Status-Structure(SSS)
 
-    :param linestring_1: input linestrings
-    :param linestring_2: input other linestrings
+    :param linestring_infected: input linestrings of the healthy person
+    :param linestrings_healthy: input other linestrings of the healthy person
     :param distance: tolerance
     :return: geometric intersection
     '''
@@ -134,18 +134,18 @@ def intersect_geom(linestring_1, linestring_2, distance):
     lines_set_healthy = set()
 
     # each point gets his line
-    for line in linestring_1:
-        ptl_1.append([line.startpoint, line])
-        ptl_1.append([line.endpoint, line])
+    for line in linestrings_infected:
+        ptl_1.append([line.startpoint.x - (distance*360)/40000000, line])
+        ptl_1.append([line.endpoint.x + (distance*360)/40000000, line])
         lines_set_infected.add(line)
-    for line in linestring_2:
-        ptl_2.append([line.startpoint, line])
-        ptl_2.append([line.endpoint, line])
+    for line in linestrings_healthy:
+        ptl_2.append([line.startpoint.x, line])
+        ptl_2.append([line.endpoint.x, line])
         lines_set_healthy.add(line)
 
     ptl_1.extend(ptl_2)
     # sort ptl_1 by x component
-    ptl_sorted = sorted(ptl_1, key=lambda list_element: list_element[0].x)
+    ptl_sorted = sorted(ptl_1, key=lambda list_element: list_element[0])
 
     # ptl_1 = sorted(ptl_1, key=lambda list_element: list_element[0].x)
     # ptl_2 = sorted(ptl_2, key=lambda list_element: list_element[0].x)
