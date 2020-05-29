@@ -3,12 +3,6 @@ from osgeo import ogr, osr
 
 class Point:
 
-    source = osr.SpatialReference()
-    source.ImportFromEPSG(4326)
-    target = osr.SpatialReference()
-    target.ImportFromEPSG(25832)
-    transform = osr.CoordinateTransformation(source, target)
-
     def __init__(self, x, y, timestamp):
         self.__ogrPoint = ogr.Geometry(ogr.wkbPoint)
         self.__ogrPoint.AddPoint_2D(y, x)

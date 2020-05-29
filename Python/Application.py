@@ -73,18 +73,14 @@ if __name__ == "__main__":
     infectedLines = lines1
     healthyLines = lines2 + lines3
 
-
-    bboxInfected = create_bounding_box(infectedLines)
-    bboxHealthy = create_bounding_box(healthyLines)
-
-    infectedLines = intersect_bounding_box(infectedLines, bboxHealthy)
-    healthyLines = intersect_bounding_box(healthyLines, bboxInfected)
+    infectedLines, healthyLines = boundingBox_intersection(infectedLines, healthyLines)
 
 
     convert_linestring_to_shapefile(infectedLines, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines",
                                     "Splitted_Lines_Krank_Juli2019_ogr")
     convert_linestring_to_shapefile(healthyLines, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines",
                                     "Splitted_Lines_Gesund_Juli2019_ogr")
+    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Linestrings auf Projektgebiet reduziert")
 
 
     result_geom = intersect_geom(infectedLines, healthyLines, distance=10)

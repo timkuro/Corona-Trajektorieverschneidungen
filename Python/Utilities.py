@@ -24,7 +24,7 @@ def read_kml_line(path):
     else:
         raise Exception('no track-tag found in KML')
 
-def split_line(input_line, startdate_iso, enddate_iso, personal_id):
+def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4326):
     '''
     Splits the long line into line sections in a defined timeframe adding the time as attribute
 
@@ -34,6 +34,13 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id):
     :return: lines in timeframe in a list
     '''
     list_Linestrings = list()
+
+    # define coordinate transformation
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(sourceEPSG)
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(25832)
+    Point.transform = osr.CoordinateTransformation(source, target)
 
     # first timestamp
     old_time = (input_line[1].text)
@@ -111,11 +118,29 @@ def intersect_bounding_box(linestrings, bbox):
     return result
 
 
+def boundingBox_intersection(infectedLines, healthyLines):
+    '''
+    Call Methods to reduce the input datas
+
+    :param infectedLines: input linestrings of the injured person
+    :param healthyLines: input other linestrings of the healthy person
+    :return: reducedInfectedLines, reducedHealthyLines
+    '''
+
+    bboxInfected = create_bounding_box(infectedLines)
+    bboxHealthy = create_bounding_box(healthyLines)
+
+    reducedInfectedLines = intersect_bounding_box(infectedLines, bboxHealthy)
+    reducedHealthyLines = intersect_bounding_box(healthyLines, bboxInfected)
+
+    return reducedInfectedLines, reducedHealthyLines
+
+
 def intersect_geom(linestrings_infected, linestrings_healthy, distance):
     '''
     Intersects two lists of linestrings with a defined tolerance by using a Sweep-Status-Structure(SSS)
 
-    :param linestring_infected: input linestrings of the healthy person
+    :param linestring_infected: input linestrings of the injured person
     :param linestrings_healthy: input other linestrings of the healthy person
     :param distance: tolerance
     :return: geometric intersection
