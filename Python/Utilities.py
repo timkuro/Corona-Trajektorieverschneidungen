@@ -30,12 +30,13 @@ def read_kml_line(kml):
     :return: Track from KML File
     '''
 
-    if os.path.isfile(kml):
+    try:
+        os.path.isfile(kml)
         tree = ET.parse(kml)
-    else:
-        tree = ET.fromstring(kml)
+        root = tree.getroot()
+    except:
+        root = ET.fromstring(kml)
 
-    root = tree.getroot()
     if "Track" in root[0][0][1].tag:
         return root[0][0][1]
     else:
@@ -353,3 +354,4 @@ def convert_crossline_to_shapefile(lines, path, filename):
 
 if __name__=="__main__":
     pass
+
