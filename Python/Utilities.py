@@ -7,17 +7,34 @@ import datetime
 from osgeo import ogr, osr
 from Geometries import *
 
+def write_kml_to_file(kml, path, filename):
+    '''
+        Write kml to a file
 
+        :param kml: kml as String
+        :param path: target file path
+        :param filename: target file name
+        :return: path of the saved kml file
+    '''
 
-def read_kml_line(path):
+    path = path + "\\" + filename
+    datei = open(path, 'a')
+    datei.write(kml)
+    return path
+
+def read_kml_line(kml):
     '''
     Reads the input kml file and prepares data for further operations
 
-    :param path: file path to kml file
+    :param path: file path to kml file or kml as String
     :return: Track from KML File
     '''
 
-    tree = ET.parse(path)
+    if os.path.isfile(kml):
+        tree = ET.parse(kml)
+    else:
+        tree = ET.fromstring(kml)
+
     root = tree.getroot()
     if "Track" in root[0][0][1].tag:
         return root[0][0][1]
@@ -332,3 +349,7 @@ def convert_crossline_to_shapefile(lines, path, filename):
         feature.SetGeometry(cross_line.geometry)
         # create the feature in the layer (shapefile)
         layer.CreateFeature(feature)
+
+
+if __name__=="__main__":
+    pass
