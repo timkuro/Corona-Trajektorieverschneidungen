@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Lese erste Datei als kranke Person")
 
-    datei1 = read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Christian_Juli2019.kml")
+    datei1 = read_kml_line(open(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Christian_Juli2019.kml").read())
 
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(len(datei1) / 2 - 1) + " Punkte")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Splitte erste Datei")
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Linien: " + str(len(lines1)) + " Linien")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Exportiere erste gesplittete Datei")
 
-    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019_ogr")
+    convert_linestring_to_shapefile(lines1, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019_ogr")
 
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Erste Linie gesplittet")
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Linien: " + str(len(lines2)) + " Linien")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Exportiere zweite gesplittete Datei")
 
-    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Christian_Juli2019_ogr")
+    convert_linestring_to_shapefile(lines2, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines", "Splitted_Lines_Tim_Juli2019_ogr")
 
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Zweite Linie gesplittet")
 
@@ -57,8 +57,7 @@ if __name__ == "__main__":
 
     datei3 = read_kml_line(path[:-len(export_path[-1])] + "Standortverlauf_Juli_2019\Standortverlauf_Thomas_Juli2019.kml")
 
-    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(
-        len(datei3) / 2 - 1) + " Punkte")
+    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Anzahl Punkte: " + str(len(datei3) / 2 - 1) + " Punkte")
     print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Splitte dritte Datei")
 
     lines3 = split_line(datei3, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', "gesund_Thomas")
@@ -74,18 +73,14 @@ if __name__ == "__main__":
     infectedLines = lines1
     healthyLines = lines2 + lines3
 
-
-    bboxInfected = create_bounding_box(infectedLines)
-    bboxHealthy = create_bounding_box(healthyLines)
-
-    infectedLines = intersect_bounding_box(infectedLines, bboxHealthy)
-    healthyLines = intersect_bounding_box(healthyLines, bboxInfected)
+    infectedLines, healthyLines = boundingBox_intersection(infectedLines, healthyLines)
 
 
     convert_linestring_to_shapefile(infectedLines, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines",
-                                    "Splitted_Lines_Christian_Juli2019_ogr")
+                                    "Splitted_Lines_Krank_Juli2019_ogr")
     convert_linestring_to_shapefile(healthyLines, path[:-len(export_path[-1])] + r"Ergebnisse\Splitted_Lines",
-                                    "Splitted_Lines_Tim_Juli2019_ogr")
+                                    "Splitted_Lines_Gesund_Juli2019_ogr")
+    print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Linestrings auf Projektgebiet reduziert")
 
 
     result_geom = intersect_geom(infectedLines, healthyLines, distance=10)

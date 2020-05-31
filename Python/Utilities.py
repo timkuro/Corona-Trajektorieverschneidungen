@@ -7,24 +7,42 @@ import datetime
 from osgeo import ogr, osr
 from Geometries import *
 
+def write_kml_to_file(kml, path, filename):
+    '''
+        Write kml to a file
 
+        :param kml: kml as String
+        :param path: target file path
+        :param filename: target file name
+        :return: path of the saved kml file
+    '''
 
-def read_kml_line(path):
+    path = path + "\\" + filename
+    datei = open(path, 'a')
+    datei.write(kml)
+    return path
+
+def read_kml_line(kml):
     '''
     Reads the input kml file and prepares data for further operations
 
-    :param path: file path to kml file
+    :param path: file path to kml file or kml as String
     :return: Track from KML File
     '''
 
-    tree = ET.parse(path)
-    root = tree.getroot()
+    try:
+        os.path.isfile(kml)
+        tree = ET.parse(kml)
+        root = tree.getroot()
+    except:
+        root = ET.fromstring(kml)
+
     if "Track" in root[0][0][1].tag:
         return root[0][0][1]
     else:
         raise Exception('no track-tag found in KML')
 
-def split_line(input_line, startdate_iso, enddate_iso, personal_id):
+def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4326):
     '''
     Splits the long line into line sections in a defined timeframe adding the time as attribute
 
@@ -34,6 +52,13 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id):
     :return: lines in timeframe in a list
     '''
     list_Linestrings = list()
+
+    # define coordinate transformation
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(sourceEPSG)
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(25832)
+    Point.transform = osr.CoordinateTransformation(source, target)
 
     # first timestamp
     old_time = (input_line[1].text)
@@ -55,17 +80,14 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id):
         point = Point(float(coordinate[0]), float(coordinate[1]), time_py)
         # filter points aren't in time frame
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
-            distance = (math.sqrt((point.x-old_point.x)**2 + (point.y-old_point.y)**2)/360)*40000000
+            distance = math.sqrt((point.getX()-old_point.getX())**2 + (point.getY()-old_point.getY())**2)
             time_delta = (point.timestamp-old_point.timestamp).total_seconds()
             # filter outliers (speed > 50 m/s)
-            if time_delta >0 and distance < 5000:
+            if time_delta > 0 and distance < 5000:
                 velocity = distance/time_delta
                 if velocity < 50: # [m/s]
                     # fill output list
                     list_Linestrings.append(Linestring(old_point, point, personal_id))
-                #else:
-                    # k = k+1
-                    #print(f"{k}. Ausreißer")
 
         old_point = point
 
@@ -74,35 +96,38 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id):
 def create_bounding_box(linestrings):
     '''
     Calculates a bounding box of the linestrings
+
     :param linestrings: input linestrings (splittet line)
     :return: bbox as dictionary with corner coordinates
     '''
-    bbox = {'xMin':linestrings[0].startpoint.x, 'xMax':linestrings[0].startpoint.x, 'yMin':linestrings[0].startpoint.y, 'yMax':linestrings[0].startpoint.y}
+
+    bbox = {'xMin':linestrings[0].startpoint.getX(), 'xMax':linestrings[0].startpoint.getY(), 'yMin':linestrings[0].startpoint.getX(), 'yMax':linestrings[0].startpoint.getY()}
     # search the border points
     for line in linestrings:
-        if line.endpoint.x < bbox['xMin']:
-            bbox['xMin'] = line.endpoint.x
-        elif line.endpoint.x > bbox['xMax']:
-            bbox['xMax'] = line.endpoint.x
-        if line.endpoint.y < bbox['yMin']:
-            bbox['yMin'] = line.endpoint.y
-        elif line.endpoint.y > bbox['yMax']:
-            bbox['yMax'] = line.endpoint.y
+        if line.endpoint.getX() < bbox['xMin']:
+            bbox['xMin'] = line.endpoint.getX()
+        elif line.endpoint.getX() > bbox['xMax']:
+            bbox['xMax'] = line.endpoint.getX()
+        if line.endpoint.getY() < bbox['yMin']:
+            bbox['yMin'] = line.endpoint.getY()
+        elif line.endpoint.getY() > bbox['yMax']:
+            bbox['yMax'] = line.endpoint.getY()
     return bbox
 
 def intersect_bounding_box(linestrings, bbox):
     '''
     Return linestrings intersected by the bbox
+
     :param linestrings: input linestrings
     :param bbox: bbox of other linestring
     :return: by bbox intersected linestrings
     '''
     result = list()
     for line in linestrings:
-        linestart_X = line.startpoint.x
-        lineend_X = line.endpoint.x
-        linestart_Y = line.startpoint.y
-        lineend_Y = line.endpoint.y
+        linestart_X = line.startpoint.getX()
+        lineend_X = line.endpoint.getX()
+        linestart_Y = line.startpoint.getY()
+        lineend_Y = line.endpoint.getY()
 
         if ((bbox['xMax'] > linestart_X > bbox['xMin']) and (bbox['yMax'] > linestart_Y > bbox['yMin'])) or \
                 ((bbox['xMax'] > lineend_X > bbox['xMin']) and (bbox['yMax'] > lineend_Y > bbox['yMin'])):
@@ -111,11 +136,29 @@ def intersect_bounding_box(linestrings, bbox):
     return result
 
 
+def boundingBox_intersection(infectedLines, healthyLines):
+    '''
+    Call Methods to reduce the input datas
+
+    :param infectedLines: input linestrings of the injured person
+    :param healthyLines: input other linestrings of the healthy person
+    :return: reducedInfectedLines, reducedHealthyLines
+    '''
+
+    bboxInfected = create_bounding_box(infectedLines)
+    bboxHealthy = create_bounding_box(healthyLines)
+
+    reducedInfectedLines = intersect_bounding_box(infectedLines, bboxHealthy)
+    reducedHealthyLines = intersect_bounding_box(healthyLines, bboxInfected)
+
+    return reducedInfectedLines, reducedHealthyLines
+
+
 def intersect_geom(linestrings_infected, linestrings_healthy, distance):
     '''
     Intersects two lists of linestrings with a defined tolerance by using a Sweep-Status-Structure(SSS)
 
-    :param linestring_infected: input linestrings of the healthy person
+    :param linestring_infected: input linestrings of the injured person
     :param linestrings_healthy: input other linestrings of the healthy person
     :param distance: tolerance
     :return: geometric intersection
@@ -135,20 +178,18 @@ def intersect_geom(linestrings_infected, linestrings_healthy, distance):
 
     # each point gets his line
     for line in linestrings_infected:
-        ptl_1.append([line.startpoint.x - (distance*360)/40000000, line])
-        ptl_1.append([line.endpoint.x + (distance*360)/40000000, line])
+        #
+        ptl_1.append([line.startpoint.getX() - distance, line])
+        ptl_1.append([line.endpoint.getX() + distance, line])
         lines_set_infected.add(line)
     for line in linestrings_healthy:
-        ptl_2.append([line.startpoint.x, line])
-        ptl_2.append([line.endpoint.x, line])
+        ptl_2.append([line.startpoint.getX(), line])
+        ptl_2.append([line.endpoint.getX(), line])
         lines_set_healthy.add(line)
 
     ptl_1.extend(ptl_2)
     # sort ptl_1 by x component
     ptl_sorted = sorted(ptl_1, key=lambda list_element: list_element[0])
-
-    # ptl_1 = sorted(ptl_1, key=lambda list_element: list_element[0].x)
-    # ptl_2 = sorted(ptl_2, key=lambda list_element: list_element[0].x)
 
     # go through each point in sorted point list
     for point in ptl_sorted:
@@ -208,6 +249,7 @@ def intersect_time(crossings, delta):
 def convert_linestring_to_shapefile(list_linestring, path, filename):
     '''
     Converts a list of linestrings into a ESRI shapefile
+
     :param list_linestring: lines to convert
     :param path: output path
     :param filename: output filename
@@ -218,12 +260,12 @@ def convert_linestring_to_shapefile(list_linestring, path, filename):
     # create the data source
     data_source = driver.CreateDataSource(path + "\\" + filename + ".shp")
 
-    # create the spatial reference, WGS84
-    '''srs = osr.SpatialReference()
-    srs.ImportFromEPSG(4326)'''
+    # create the spatial reference, ETRS89_UTM32
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(25832)
 
     # create Layer
-    layer = data_source.CreateLayer("linestrings", None, ogr.wkbLineString)
+    layer = data_source.CreateLayer("linestrings", srs, ogr.wkbLineString)
 
     # add the fields
     starttime = ogr.FieldDefn("starttime", ogr.OFTString)
@@ -244,64 +286,10 @@ def convert_linestring_to_shapefile(list_linestring, path, filename):
         feature.SetField("endtime", linestring.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
         feature.SetField("pers_id", str(linestring.personal_id))
 
-        # create geometry from linestring object
-        line_ogr = ogr.Geometry(ogr.wkbLineString)
-        line_ogr.AddPoint(linestring.startpoint.x, linestring.startpoint.y)
-        line_ogr.AddPoint(linestring.endpoint.x, linestring.endpoint.y)
-
         # set the feature geometry using the point
-        feature.SetGeometry(line_ogr)
+        feature.SetGeometry(linestring.ogrLinestring)
         # create the feature in the layer (shapefile)
         layer.CreateFeature(feature)
-
-"""
-def convert_crossarea_to_shapefile(area_list, path, filename):
-    '''
-    Converts a list of areas into a ESRI shapefile
-    :param area_list: areas to convert
-    :param path: output path
-    :param filename: output filename
-    '''
-    # set up the shapefile driver
-    driver = ogr.GetDriverByName("ESRI Shapefile")
-
-    # create the data source
-    data_source = driver.CreateDataSource(path + "\\" + filename + ".shp")
-
-    # create the spatial reference, WGS84
-    '''srs = osr.SpatialReference()
-    srs.ImportFromEPSG(4326)'''
-    # Create Layer
-    layer = data_source.CreateLayer("polygons", None, ogr.wkbPolygon)
-
-    # add the fields
-    starttime = ogr.FieldDefn("line1_sta", ogr.OFTString)
-    starttime.SetWidth(32)
-    layer.CreateField(starttime)
-    endtime = ogr.FieldDefn("line1_end", ogr.OFTString)
-    endtime.SetWidth(32)
-    layer.CreateField(endtime)
-    starttime = ogr.FieldDefn("line2_sta", ogr.OFTString)
-    starttime.SetWidth(32)
-    layer.CreateField(starttime)
-    endtime = ogr.FieldDefn("line2_end", ogr.OFTString)
-    endtime.SetWidth(32)
-    layer.CreateField(endtime)
-
-    for cross_area in area_list:
-        feature = ogr.Feature(layer.GetLayerDefn())
-
-        # set the attributes using the values from the delimited text file
-        feature.SetField("line1_sta", cross_area.line1.startpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
-        feature.SetField("line1_end", cross_area.line1.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
-        feature.SetField("line2_sta", cross_area.line2.startpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
-        feature.SetField("line2_end", cross_area.line2.endpoint.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'))
-
-        # set the feature geometry using the polygon
-        feature.SetGeometry(cross_area.polygon)
-        # create the feature in the layer (shapefile)
-        layer.CreateFeature(feature)
-"""
 
 def convert_crossline_to_shapefile(lines, path, filename):
     '''
@@ -318,11 +306,12 @@ def convert_crossline_to_shapefile(lines, path, filename):
     # create the data source
     data_source = driver.CreateDataSource(path + "\\" + filename + ".shp")
 
-    # create the spatial reference, WGS84
-    '''srs = osr.SpatialReference()
-    srs.ImportFromEPSG(4326)'''
+    # create the spatial reference, ETRS89_UTM32
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(25832)
+
     # create Layer
-    layer = data_source.CreateLayer("polygons", None, ogr.wkbLineString)
+    layer = data_source.CreateLayer("polygons", srs, ogr.wkbLineString)
 
     # add the fields
     starttime = ogr.FieldDefn("line1_sta", ogr.OFTString)
@@ -361,3 +350,8 @@ def convert_crossline_to_shapefile(lines, path, filename):
         feature.SetGeometry(cross_line.geometry)
         # create the feature in the layer (shapefile)
         layer.CreateFeature(feature)
+
+
+if __name__=="__main__":
+    pass
+
