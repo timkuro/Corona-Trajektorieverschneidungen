@@ -2,11 +2,15 @@ from time import localtime
 from osgeo import ogr, osr
 
 class Point:
+    '''
+    Point Object
 
-    def __init__(self, x, y, timestamp):
-        self.__ogrPoint = ogr.Geometry(ogr.wkbPoint)
-        self.__ogrPoint.AddPoint_2D(y, x)
-        self.__ogrPoint.Transform(self.transform)
+    __ogrPoint: Type ogrGeometry
+    __timestamp: Type datetime
+    '''
+
+    def __init__(self, ogrPoint, timestamp):
+        self.__ogrPoint = ogrPoint
         self.__timestamp = timestamp
 
     def getX(self):
@@ -25,6 +29,14 @@ class Point:
     timestamp = property(getTimestamp)
 
 class Linestring:
+    '''
+        Linestring Object
+
+        personal_id: Type String
+        startpoint: Type Point
+        endpoint: Type Point
+        ogrLinestring: Type ogrGeometry
+    '''
 
     __ogr_Buffer = None
 
@@ -97,14 +109,4 @@ class Cross_Geometry:
         return f"Crossgeometry[{self.geometry}, 1: {self.line1}, 2: {self.line2}]"
 
 if __name__ == "__main__":
-
-    textpoint = Point(1, 2, "Uhrzeit")
-    print(textpoint)
-
-    test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Buffer_line(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29")), 10))
-    print(type(test))
-    print(test)
-    print(test.line1.ogrLinestring.ExportToWkt())
-    if not test:
-        print('keine geometrie')
-    #print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))
+    pass

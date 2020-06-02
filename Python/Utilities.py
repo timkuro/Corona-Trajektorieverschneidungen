@@ -58,15 +58,19 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4
     source.ImportFromEPSG(sourceEPSG)
     target = osr.SpatialReference()
     target.ImportFromEPSG(25832)
-    Point.transform = osr.CoordinateTransformation(source, target)
+    transform_objekt = osr.CoordinateTransformation(source, target)
 
     # first timestamp
     old_time = (input_line[1].text)
     old_time_py = datetime.datetime.strptime(old_time, '%Y-%m-%dT%H:%M:%SZ')
     # first coordinate
     old_coordinate = (input_line[2].text).split(" ")
+
     # merge time and coordinate to point
-    old_point = Point(float(old_coordinate[0]), float(old_coordinate[1]), old_time_py)
+    ogrPoint = ogr.Geometry(ogr.wkbPoint)
+    ogrPoint.AddPoint_2D(float(old_coordinate[1]), float(old_coordinate[0]))
+    ogrPoint.Transform(transform_objekt)
+    old_point = Point(ogrPoint, old_time_py)
 
     startdate_py = datetime.datetime.strptime(startdate_iso, '%Y-%m-%dT%H:%M:%SZ')
     enddate_py = datetime.datetime.strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ')
@@ -77,7 +81,10 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4
         time_iso = (input_line[i].text)
         time_py = datetime.datetime.strptime(time_iso, '%Y-%m-%dT%H:%M:%SZ')
         coordinate = (input_line[i+1].text).split(" ")
-        point = Point(float(coordinate[0]), float(coordinate[1]), time_py)
+        ogrPoint = ogr.Geometry(ogr.wkbPoint)
+        ogrPoint.AddPoint_2D(float(coordinate[1]), float(coordinate[0]))
+        ogrPoint.Transform(transform_objekt)
+        point = Point(ogrPoint, time_py)
         # filter points aren't in time frame
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
             distance = math.sqrt((point.getX()-old_point.getX())**2 + (point.getY()-old_point.getY())**2)
