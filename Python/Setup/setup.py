@@ -1,4 +1,4 @@
-import ez_setup
+from Setup import ez_setup
 from setuptools import setup
 ez_setup.use_setuptools()
 

@@ -1,8 +1,8 @@
 import time
-
 import cherrypy
-from Utilities import *
 import os
+from Corona_Trajectories_Intersection import *
+
 
 infected_persons = []
 test_persons = []
@@ -55,18 +55,18 @@ class Test_person:
                f"C:\\Users\\" + os.environ['USERNAME'] + "\\", "corona_contacts.shp. \nPost took " + (str)(timedif) + " seconds."
 
 
-if __name__ == '__main__':
-    cherrypy.tree.mount(
-        Test_person(), '/api/test_person',
-        {'/':
-             {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}
-         }
-    )
-    cherrypy.tree.mount(
-        Infected_person(), '/api/infected_person',
-        {'/':
-             {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}
-         })
+#if __name__ == '__main__':
+cherrypy.tree.mount(
+    Test_person(), '/api/test_person',
+    {'/':
+         {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}
+     }
+)
+cherrypy.tree.mount(
+    Infected_person(), '/api/infected_person',
+    {'/':
+         {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}
+     })
 
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+cherrypy.engine.start()
+cherrypy.engine.block()
