@@ -40,6 +40,13 @@ class Linestring:
 
     __ogr_Buffer = None
 
+    def __init__(self, ogrLinestring, startpoint, endpoint, personal_id=None):
+        self.personal_id = personal_id
+        self.startpoint = startpoint
+        self.endpoint = endpoint
+
+        self.ogrLinestring = ogrLinestring
+
     def __init__(self, startpoint, endpoint, personal_id=None):
         self.personal_id = personal_id
         self.startpoint = startpoint
