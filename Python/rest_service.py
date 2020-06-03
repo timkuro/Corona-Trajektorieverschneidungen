@@ -1,3 +1,5 @@
+import time
+
 import cherrypy
 from Utilities import *
 import os
@@ -28,6 +30,7 @@ class Test_person:
         return str(len(test_persons))
 
     def POST(self):
+        starttime = time.time()
         rawData = cherrypy.request.body.read(int(cherrypy.request.headers['Content-Length']))
         rawData_xml = read_kml_line(rawData)
 
@@ -46,9 +49,10 @@ class Test_person:
         result_time = intersect_time(result_geom, delta=datetime.timedelta(minutes=15))
 
         convert_crossline_to_shapefile(result_time, "C:\\Users\\" + os.environ['USERNAME'] + "\\", "corona_contacts")
-
+        endtime = time.time()
+        timedif = endtime - starttime
         return f"You may mave had {len(result_time)} contacts with infected persons. To see the positions, open " \
-               f"C:\\Users\\" + os.environ['USERNAME'] + "\\", "corona_contacts.shp"
+               f"C:\\Users\\" + os.environ['USERNAME'] + "\\", "corona_contacts.shp. \nPost took " + (str)(timedif) + " seconds."
 
 
 if __name__ == '__main__':
