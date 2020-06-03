@@ -1,9 +1,8 @@
 # coding=utf-8
-import math
 import xml.etree.ElementTree as ET
-import os
-import datetime
+import os, uuid, math, datetime
 from Corona_Trajectories_Intersection.Geometries import *
+from config import parameters
 
 def write_kml_to_file(kml, path, filename):
     '''
@@ -40,7 +39,7 @@ def read_kml_line(kml):
     else:
         raise Exception('no track-tag found in KML')
 
-def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4326):
+def split_line(input_line, personal_id=None):
     '''
     Splits the long line into line sections in a defined timeframe adding the time as attribute
 
@@ -51,11 +50,14 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4
     '''
     list_Linestrings = list()
 
+    if personal_id==None:
+        personal_id = uuid.uuid4().int
+
     # define coordinate transformation
     source = osr.SpatialReference()
-    source.ImportFromEPSG(sourceEPSG)
+    source.ImportFromEPSG(parameters['sourceEPSG'])
     target = osr.SpatialReference()
-    target.ImportFromEPSG(25832)
+    target.ImportFromEPSG(parameters['targetEPSG'])
     transform_objekt = osr.CoordinateTransformation(source, target)
 
     # first timestamp
@@ -70,8 +72,8 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4
     ogrPoint.Transform(transform_objekt)
     old_point = Point(ogrPoint, old_time_py)
 
-    startdate_py = datetime.datetime.strptime(startdate_iso, '%Y-%m-%dT%H:%M:%SZ')
-    enddate_py = datetime.datetime.strptime(enddate_iso, '%Y-%m-%dT%H:%M:%SZ')
+    startdate_py = datetime.datetime.strptime(parameters['starttime'], '%Y-%m-%dT%H:%M:%SZ')
+    enddate_py = datetime.datetime.strptime(parameters['endtime'], '%Y-%m-%dT%H:%M:%SZ')
     # k = 0
     # loop reads large line and splits into sections
     for i in range(3,len(input_line), 2):
@@ -92,7 +94,7 @@ def split_line(input_line, startdate_iso, enddate_iso, personal_id, sourceEPSG=4
                 velocity = distance/time_delta
                 if velocity < 50: # [m/s]
                     # fill output list
-                    list_Linestrings.append(Linestring(old_point, point, personal_id))
+                    list_Linestrings.append(Linestring(old_point, point, personal_id=personal_id))
 
         old_point = point
 
@@ -159,7 +161,7 @@ def boundingBox_intersection(infectedLines, healthyLines):
     return reducedInfectedLines, reducedHealthyLines
 
 
-def intersect_geom(linestrings_infected, linestrings_healthy, distance):
+def intersect_geom(linestrings_infected, linestrings_healthy):
     '''
     Intersects two lists of linestrings with a defined tolerance by using a Sweep-Status-Structure(SSS)
 
@@ -184,8 +186,8 @@ def intersect_geom(linestrings_infected, linestrings_healthy, distance):
     # each point gets his line
     for line in linestrings_infected:
         #
-        ptl_1.append([line.startpoint.getX() - distance, line])
-        ptl_1.append([line.endpoint.getX() + distance, line])
+        ptl_1.append([line.startpoint.getX() - parameters['distance'], line])
+        ptl_1.append([line.endpoint.getX() + parameters['distance'], line])
         lines_set_infected.add(line)
     for line in linestrings_healthy:
         ptl_2.append([line.startpoint.getX(), line])
@@ -209,7 +211,7 @@ def intersect_geom(linestrings_infected, linestrings_healthy, distance):
                     if line in lines_set_healthy:
                         try:
                             # intersection calculation
-                            cross_area = trace.intersect_Buffer_line(line, distance=distance)
+                            cross_area = trace.intersect_Buffer_line(line)
                             geometric_intersections.append(cross_area)
                         except:
                             continue
@@ -218,7 +220,7 @@ def intersect_geom(linestrings_infected, linestrings_healthy, distance):
                 else:
                     if line in lines_set_infected:
                         try:
-                            cross_area = line.intersect_Buffer_line(trace, distance=distance)
+                            cross_area = line.intersect_Buffer_line(trace)
                             geometric_intersections.append(cross_area)
                         except:
                             continue
@@ -226,7 +228,7 @@ def intersect_geom(linestrings_infected, linestrings_healthy, distance):
             sss.add(trace)
     return geometric_intersections
 
-def intersect_time(crossings, delta):
+def intersect_time(crossings):
     '''
     checks the temporal intersection of the crossings
 
@@ -238,10 +240,10 @@ def intersect_time(crossings, delta):
 
     for crossing in crossings:
         # calculate time with delta
-        line1start = crossing.line1.startpoint.timestamp - delta
-        line1end = crossing.line1.endpoint.timestamp + delta
-        line2start = crossing.line2.startpoint.timestamp - delta
-        line2end = crossing.line2.endpoint.timestamp + delta
+        line1start = crossing.line1.startpoint.timestamp - parameters['timedelta']
+        line1end = crossing.line1.endpoint.timestamp + parameters['timedelta']
+        line2start = crossing.line2.startpoint.timestamp - parameters['timedelta']
+        line2end = crossing.line2.endpoint.timestamp + parameters['timedelta']
 
         # check temporal intersection
         if (line2start >= line1start and line2start <= line1end) or (line2end >= line1start and line2end <= line1end) or \
@@ -267,7 +269,7 @@ def convert_linestring_to_shapefile(list_linestring, path, filename):
 
     # create the spatial reference, ETRS89_UTM32
     srs = osr.SpatialReference()
-    srs.ImportFromEPSG(25832)
+    srs.ImportFromEPSG(parameters['targetEPSG'])
 
     # create Layer
     layer = data_source.CreateLayer("linestrings", srs, ogr.wkbLineString)
@@ -313,7 +315,7 @@ def convert_crossline_to_shapefile(lines, path, filename):
 
     # create the spatial reference, ETRS89_UTM32
     srs = osr.SpatialReference()
-    srs.ImportFromEPSG(25832)
+    srs.ImportFromEPSG(parameters['targetEPSG'])
 
     # create Layer
     layer = data_source.CreateLayer("polygons", srs, ogr.wkbLineString)

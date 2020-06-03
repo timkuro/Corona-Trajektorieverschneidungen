@@ -1,5 +1,6 @@
 from time import localtime
 from osgeo import ogr, osr
+from config import parameters
 
 class Point:
     '''
@@ -38,41 +39,31 @@ class Linestring:
         ogrLinestring: Type ogrGeometry
     '''
 
-    __ogr_Buffer = None
-
-    def __init__(self, ogrLinestring, startpoint, endpoint, personal_id=None):
-        self.personal_id = personal_id
+    def __init__(self, startpoint, endpoint, personal_id, ogrLinestring=None):
         self.startpoint = startpoint
         self.endpoint = endpoint
 
-        self.ogrLinestring = ogrLinestring
-
-    def __init__(self, startpoint, endpoint, personal_id=None):
         self.personal_id = personal_id
-        self.startpoint = startpoint
-        self.endpoint = endpoint
 
-        self.ogrLinestring = ogr.Geometry(ogr.wkbLineString)
-        self.ogrLinestring.AddPoint_2D(startpoint.getX(), startpoint.getY())
-        self.ogrLinestring.AddPoint_2D(endpoint.getX(), endpoint.getY())
+        if ogrLinestring==None:
+            self.ogrLinestring = ogr.Geometry(ogr.wkbLineString)
+            self.ogrLinestring.AddPoint_2D(startpoint.getX(), startpoint.getY())
+            self.ogrLinestring.AddPoint_2D(endpoint.getX(), endpoint.getY())
+        else:
+            self.ogrLinestring = ogrLinestring
 
-    def intersect_Buffer(self, other_line, distance):
+        self.ogr_Buffer = self.ogrLinestring.Buffer(parameters['distance'])
+
+    def intersect_Buffer(self, other_line):
         '''
         DEPRECATED
         Intersects the buffers two lines
 
         :param other_line: line to be intersected
-        :param distance: buffer size
         :return: crossing area
         '''
 
-        self_ogr = self.ogrLinestring
-        other_ogr = other_line.ogrLinestring
-
-        self_buffer = self_ogr.Buffer(distance)
-
-        other_buffer = other_ogr.Buffer(distance)
-        intersect_buffer = self_buffer.Intersection(other_buffer)
+        intersect_buffer = self.ogr_Buffer.Intersection(other_line.ogrBuffer)
 
         if intersect_buffer:
             cross_area = Cross_Geometry(intersect_buffer, self, other_line)
@@ -80,22 +71,15 @@ class Linestring:
         else:
             raise Exception("No intersection found")
 
-    def intersect_Buffer_line(self, other_line, distance):
+    def intersect_Buffer_line(self, other_line):
         '''
         Intersects a line with a buffer of an other line
 
         :param other_line:
-        :param distance:
         :return:
         '''
-        self_ogr = self.ogrLinestring
-        other_ogr = other_line.ogrLinestring
 
-        if self.__ogr_Buffer == None:
-            self.__ogr_Buffer = self_ogr.Buffer(distance)
-        self_buffer = self.__ogr_Buffer
-
-        intersect_buffer_line = self_buffer.Intersection(other_ogr)
+        intersect_buffer_line = self.ogr_Buffer.Intersection(other_line.ogrLinestring)
 
         if intersect_buffer_line:
             cross_area = Cross_Geometry(intersect_buffer_line, self, other_line)
