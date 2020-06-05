@@ -39,20 +39,23 @@ class Linestring:
         ogrLinestring: Type ogrGeometry
     '''
 
-    def __init__(self, startpoint, endpoint, personal_id, ogrLinestring=None):
+    def __init__(self, startpoint, endpoint, personal_id, ogrLinestring=None, ogrBuffer=None):
         self.startpoint = startpoint
         self.endpoint = endpoint
 
         self.personal_id = personal_id
 
-        if ogrLinestring==None:
+        if ogrLinestring is None:
             self.ogrLinestring = ogr.Geometry(ogr.wkbLineString)
             self.ogrLinestring.AddPoint_2D(startpoint.getX(), startpoint.getY())
             self.ogrLinestring.AddPoint_2D(endpoint.getX(), endpoint.getY())
         else:
             self.ogrLinestring = ogrLinestring
 
-        self.ogr_Buffer = self.ogrLinestring.Buffer(parameters['distance'])
+        if ogrBuffer is None:
+            self.ogr_Buffer = self.ogrLinestring.Buffer(parameters['distance'])
+        else:
+            self.ogr_Buffer = ogrBuffer
 
     def intersect_Buffer(self, other_line):
         '''
