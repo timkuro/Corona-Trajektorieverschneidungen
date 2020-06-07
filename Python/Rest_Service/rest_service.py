@@ -1,8 +1,6 @@
 import time
 import cherrypy
-import os
 from Corona_Trajectories_Intersection import *
-
 
 infected_persons = []
 test_persons = []
@@ -17,8 +15,7 @@ class Infected_person:
         rawData = cherrypy.request.body.read(int(cherrypy.request.headers['Content-Length']))
         rawData_xml = read_kml_line(rawData)
 
-        i = (len)(infected_persons) + 1
-        splitted_lines = split_line(rawData_xml, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', (str(i)))
+        splitted_lines = split_line(rawData_xml)
         infected_persons.append(splitted_lines)
         return splitted_lines.__str__()
 
@@ -34,8 +31,7 @@ class Test_person:
         rawData = cherrypy.request.body.read(int(cherrypy.request.headers['Content-Length']))
         rawData_xml = read_kml_line(rawData)
 
-        i = (len)(infected_persons) + 1
-        splitted_lines = split_line(rawData_xml, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', (str(i)))
+        splitted_lines = split_line(rawData_xml)
         test_persons.append(splitted_lines)
 
         infectedLines = []
@@ -45,8 +41,8 @@ class Test_person:
 
         infectedLines, healthyLines = boundingBox_intersection(infectedLines, healthyLines)
 
-        result_geom = intersect_geom(infectedLines, healthyLines, distance=10)
-        result_time = intersect_time(result_geom, delta=datetime.timedelta(minutes=15))
+        result_geom = intersect_geom(infectedLines, healthyLines)
+        result_time = intersect_time(result_geom)
 
         convert_crossline_to_shapefile(result_time, "C:\\Users\\" + os.environ['USERNAME'] + "\\", "corona_contacts")
         endtime = time.time()
