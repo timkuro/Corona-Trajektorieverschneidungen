@@ -26,6 +26,10 @@ class Point:
     def __repr__(self):
         return f"Point:[X:{self.getX()}, Y: {self.getY()}, TimeStamp: {self.timestamp}]"
 
+    def __eq__(self, other):
+
+        return ogr.Geometry.Equal(self.__ogrPoint, other.geometry) and self.__timestamp == other.timestamp
+
     geometry = property(getGeometry)
     timestamp = property(getTimestamp)
 
@@ -92,6 +96,14 @@ class Linestring:
 
     def __repr__(self):
         return f"Line:[ {self.ogrLinestring} ]"
+
+    def __eq__(self, other):
+        return self.startpoint == other.startpoint and self.endpoint == other.endpoint and\
+            self.personal_id == other.personal_id and ogr.Geometry.Equal(self.ogrLinestring,other.ogrLinestring) and\
+               ogr.Geometry.Equal(self.ogr_Buffer, other.ogr_Buffer)
+
+    def __hash__(self):
+        return hash(id(self))
 
 class Cross_Geometry:
     def __init__(self, geometry, line1, line2):
