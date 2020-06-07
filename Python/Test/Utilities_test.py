@@ -48,8 +48,8 @@ class Utilities_test(unittest.TestCase):
     p8_ogr.AddPoint_2D(100, 300)
 
     splitted_line_4 = Linestring(Point(p5_ogr, datetime.datetime.strptime('2019-07-02T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(p6_ogr, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
-    splitted_line_5 = Linestring(Point(p6_ogr, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(p7_ogr, datetime.datetime.strptime('2019-07-04T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
-    splitted_line_6 = Linestring(Point(p7_ogr, datetime.datetime.strptime('2019-07-04T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(p8_ogr, datetime.datetime.strptime('2019-07-05T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
+    splitted_line_5 = Linestring(Point(p6_ogr, datetime.datetime.strptime('2019-07-05T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(p7_ogr, datetime.datetime.strptime('2019-07-06T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
+    splitted_line_6 = Linestring(Point(p7_ogr, datetime.datetime.strptime('2019-07-06T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(p8_ogr, datetime.datetime.strptime('2019-07-07T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
     expected_splitted_lines_2 = [splitted_line_4, splitted_line_5, splitted_line_6]
 
     def test_read_kml_line(self):
@@ -95,10 +95,19 @@ class Utilities_test(unittest.TestCase):
         self.assertEqual(splitted_inter_geom_1, intersection[0].line1)
         self.assertEqual(splitted_inter_geom_2, intersection[1].line1)
 
-'''def test_intersect_time(self):
-    intersection = intersect_geom(self.expected_splitted_lines_1, self.expected_splitted_lines_2)
-    temporal_intersection = intersect_time(intersection)
-    self.assertEqual(0, 0)'''
+    def test_intersect_time(self):
+        intersection = intersect_geom(self.expected_splitted_lines_1, self.expected_splitted_lines_2)
+        temporal_intersection = intersect_time(intersection)
+
+        inter_temp_1 = ogr.Geometry(ogr.wkbPoint)
+        inter_temp_2 = ogr.Geometry(ogr.wkbPoint)
+        inter_temp_1.AddPoint_2D(0, 0)
+        inter_temp_2.AddPoint_2D(100, 100)
+        splitted_inter_temp_1 = Linestring(
+            Point(inter_temp_1, datetime.datetime.strptime('2019-07-02T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')),
+            Point(inter_temp_2, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
+
+        self.assertEqual(splitted_inter_temp_1, temporal_intersection[0].line1)
 
 
 if __name__ == "__main__":
