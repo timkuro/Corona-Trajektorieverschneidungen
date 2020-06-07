@@ -72,7 +72,7 @@ class Linestring:
 
         intersect_buffer = self.ogr_Buffer.Intersection(other_line.ogrBuffer)
 
-        if intersect_buffer:
+        if not ogr.Geometry.IsEmpty(intersect_buffer):
             cross_area = Cross_Geometry(intersect_buffer, self, other_line)
             return cross_area
         else:
@@ -88,7 +88,7 @@ class Linestring:
 
         intersect_buffer_line = self.ogr_Buffer.Intersection(other_line.ogrLinestring)
 
-        if intersect_buffer_line:
+        if not ogr.Geometry.IsEmpty(intersect_buffer_line):
             cross_area = Cross_Geometry(intersect_buffer_line, self, other_line)
             return cross_area
         else:
