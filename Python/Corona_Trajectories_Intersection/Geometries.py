@@ -106,6 +106,14 @@ class Linestring:
         return hash(id(self))
 
 class Cross_Geometry:
+    '''
+            Cross_Geometry Object
+
+            geometry: Type ogrGeometry
+            line1: Type ogrGeometry
+            line2: Type ogrGeometry
+    '''
+
     def __init__(self, geometry, line1, line2):
         self.geometry = geometry
         self.line1 = line1

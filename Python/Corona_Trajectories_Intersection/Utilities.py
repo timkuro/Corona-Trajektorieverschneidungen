@@ -23,7 +23,7 @@ def read_kml_line(kml):
     '''
     Reads the input kml file and prepares data for further operations
 
-    :param path: file path to kml file or kml as String
+    :param kml: file path to kml file or kml as String
     :return: Track from KML File
     '''
 
@@ -44,8 +44,7 @@ def split_line(input_line, personal_id=None):
     Splits the long line into line sections in a defined timeframe adding the time as attribute
 
     :param input_line: path to the input
-    :param startdate_iso: startdate of the defined timeframe
-    :param enddate_iso: enddate of the defined timeframe
+    :personal_id: id of data
     :return: lines in timeframe in a list
     '''
     list_Linestrings = list()
@@ -167,7 +166,6 @@ def intersect_geom(linestrings_infected, linestrings_healthy):
 
     :param linestring_infected: input linestrings of the injured person
     :param linestrings_healthy: input other linestrings of the healthy person
-    :param distance: tolerance
     :return: geometric intersection
     '''
     #preparation
@@ -233,7 +231,6 @@ def intersect_time(crossings):
     checks the temporal intersection of the crossings
 
     :param crossings: geometric intersections
-    :param delta: time difference
     :return: temporal intersections
     '''
     temporal_intersections = list()
