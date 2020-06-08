@@ -22,12 +22,10 @@ from django.conf.urls.static import static
 from application1 import views
 
 urlpatterns = [
-    url(r'uploads/simple', views.multiple_buttons, name='multiple_buttons'),
+    url(r'upload/formular', views.multiple_buttons, name='multiple_buttons'),
     path('', views.Home.as_view(), name='home'),
-    path('points/', include('application1.urls', namespace='application1')),
     path('admin/', admin.site.urls),
-    url(r'uploads/infected', views.post_infected_file, name='post_infected_file'),
-    url(r'uploads/healthy', views.post_healthy_file, name='post_healthy_file'),
+    url('', include('application1.urls', namespace='application1'))
 ]
 
 if settings.DEBUG:

@@ -1,12 +1,17 @@
 from time import localtime
 from osgeo import ogr, osr
+from config import parameters
 
 class Point:
+    '''
+    Point Object
 
-    def __init__(self, x, y, timestamp):
-        self.__ogrPoint = ogr.Geometry(ogr.wkbPoint)
-        self.__ogrPoint.AddPoint_2D(y, x)
-        self.__ogrPoint.Transform(self.transform)
+    __ogrPoint: Type ogrGeometry
+    __timestamp: Type datetime
+    '''
+
+    def __init__(self, ogrPoint, timestamp):
+        self.__ogrPoint = ogrPoint
         self.__timestamp = timestamp
 
     def getX(self):
@@ -21,64 +26,69 @@ class Point:
     def __repr__(self):
         return f"Point:[X:{self.getX()}, Y: {self.getY()}, TimeStamp: {self.timestamp}]"
 
+    def __eq__(self, other):
+
+        return ogr.Geometry.Equal(self.__ogrPoint, other.geometry) and self.__timestamp == other.timestamp
+
     geometry = property(getGeometry)
     timestamp = property(getTimestamp)
 
 class Linestring:
+    '''
+        Linestring Object
 
-    __ogr_Buffer = None
+        personal_id: Type String
+        startpoint: Type Point
+        endpoint: Type Point
+        ogrLinestring: Type ogrGeometry
+    '''
 
-    def __init__(self, startpoint, endpoint, personal_id=None):
-        self.personal_id = personal_id
+    def __init__(self, startpoint, endpoint, personal_id, ogrLinestring=None, ogrBuffer=None):
         self.startpoint = startpoint
         self.endpoint = endpoint
 
-        self.ogrLinestring = ogr.Geometry(ogr.wkbLineString)
-        self.ogrLinestring.AddPoint_2D(startpoint.getX(), startpoint.getY())
-        self.ogrLinestring.AddPoint_2D(endpoint.getX(), endpoint.getY())
+        self.personal_id = personal_id
 
-    def intersect_Buffer(self, other_line, distance):
+        if ogrLinestring is None:
+            self.ogrLinestring = ogr.Geometry(ogr.wkbLineString)
+            self.ogrLinestring.AddPoint_2D(startpoint.getX(), startpoint.getY())
+            self.ogrLinestring.AddPoint_2D(endpoint.getX(), endpoint.getY())
+        else:
+            self.ogrLinestring = ogrLinestring
+
+        if ogrBuffer is None:
+            self.ogr_Buffer = self.ogrLinestring.Buffer(parameters['distance'])
+        else:
+            self.ogr_Buffer = ogrBuffer
+
+    def intersect_Buffer(self, other_line):
         '''
         DEPRECATED
         Intersects the buffers two lines
 
         :param other_line: line to be intersected
-        :param distance: buffer size
         :return: crossing area
         '''
 
-        self_ogr = self.ogrLinestring
-        other_ogr = other_line.ogrLinestring
+        intersect_buffer = self.ogr_Buffer.Intersection(other_line.ogrBuffer)
 
-        self_buffer = self_ogr.Buffer(distance)
-
-        other_buffer = other_ogr.Buffer(distance)
-        intersect_buffer = self_buffer.Intersection(other_buffer)
-
-        if intersect_buffer:
+        if not ogr.Geometry.IsEmpty(intersect_buffer):
             cross_area = Cross_Geometry(intersect_buffer, self, other_line)
             return cross_area
         else:
             raise Exception("No intersection found")
 
-    def intersect_Buffer_line(self, other_line, distance):
+    def intersect_Buffer_line(self, other_line):
         '''
         Intersects a line with a buffer of an other line
 
         :param other_line:
-        :param distance:
         :return:
         '''
-        self_ogr = self.ogrLinestring
-        other_ogr = other_line.ogrLinestring
 
-        if self.__ogr_Buffer == None:
-            self.__ogr_Buffer = self_ogr.Buffer(distance)
-        self_buffer = self.__ogr_Buffer
+        intersect_buffer_line = self.ogr_Buffer.Intersection(other_line.ogrLinestring)
 
-        intersect_buffer_line = self_buffer.Intersection(other_ogr)
-
-        if intersect_buffer_line:
+        if not ogr.Geometry.IsEmpty(intersect_buffer_line):
             cross_area = Cross_Geometry(intersect_buffer_line, self, other_line)
             return cross_area
         else:
@@ -87,7 +97,23 @@ class Linestring:
     def __repr__(self):
         return f"Line:[ {self.ogrLinestring} ]"
 
+    def __eq__(self, other):
+        return self.startpoint == other.startpoint and self.endpoint == other.endpoint and\
+            self.personal_id == other.personal_id and ogr.Geometry.Equal(self.ogrLinestring,other.ogrLinestring) and\
+               ogr.Geometry.Equal(self.ogr_Buffer, other.ogr_Buffer)
+
+    def __hash__(self):
+        return hash(id(self))
+
 class Cross_Geometry:
+    '''
+            Cross_Geometry Object
+
+            geometry: Type ogrGeometry
+            line1: Type ogrGeometry
+            line2: Type ogrGeometry
+    '''
+
     def __init__(self, geometry, line1, line2):
         self.geometry = geometry
         self.line1 = line1
@@ -97,14 +123,4 @@ class Cross_Geometry:
         return f"Crossgeometry[{self.geometry}, 1: {self.line1}, 2: {self.line2}]"
 
 if __name__ == "__main__":
-
-    textpoint = Point(1, 2, "Uhrzeit")
-    print(textpoint)
-
-    test = (Linestring(Point(1,1, "2020-02-29"), Point(1,2,  "2020-02-30")).intersect_Buffer_line(Linestring(Point(2,1, "2020-02-28"), Point(1, 2, "2020-02-29")), 10))
-    print(type(test))
-    print(test)
-    print(test.line1.ogrLinestring.ExportToWkt())
-    if not test:
-        print('keine geometrie')
-    #print(str(test.firstPoint.X) + " " + str(test.firstPoint.Y))
+    pass

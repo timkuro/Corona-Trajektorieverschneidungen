@@ -1,94 +1,42 @@
-from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponse, Http404
+from zipfile import ZipFile
+
+from django.core.serializers import serialize
 from django.shortcuts import render
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
-from Business_Logic.Utilities import *
-from application1.models import Point
-
-from Business_Logic.Geometries import Point, Linestring
-from django.contrib.gis.geos import LineString as Geos_LineString, GEOSGeometry
+from Business_Logic.database_connection import *
 from application1.models import Point as Models_Point, Line_String as Models_Line_String
+
+
 class Home(TemplateView):
     template_name = 'home.html'
 
-def einzel_Punkt_Anzeige(request):
-    '''
-    template = loader.get_template('trajectory/points.html')
-    context = RequestContext(request, {'point': Point.objects.all()})
-    return HttpResponse(template.render(context))
-    '''
-
-    zeilen = []
-    for m in Point.objects.all():
-        zeilen.append("Point: vom {}".format(m.time_stamp.isoformat()))
-        zeilen.append('X-Koordinate: {}'.format(m.x))
-        zeilen.append('Y-Koordinate: {}'.format(m.y))
-        zeilen += ['', '-'*30, '']
-    antwort = HttpResponse('\n'.join(zeilen))
-    antwort['Content-Type'] = 'text/plain'
-    return  antwort
-
-def detail(request, question_id):
-    return HttpResponse("You're looking at question %s." % question_id)
-
-
-
-def point_detail(request, point_id):
-    try:
-        p = Point.objects.get(id=point_id)
-    except Point.DoesNotExist:
-        raise Http404
-    zeilen = [
-        "Dies ist eine weitere Methode/View um Objekte abzufragen",
-        "Point: vom {}".format(p.time_stamp.isoformat()),
-        'X-Koordinate: {}'.format(p.x),
-        'Y-Koordinate: {}'.format(p.y),
-        '', '-' * 30, '',
-        "Blablabla"]
-    antwort = HttpResponse('\n'.join(zeilen))
-    antwort['Content-Type'] = 'text/plain'
-    return antwort
-
 
 def multiple_buttons(request):
+    '''
+
+    :param request:
+    :return:
+    '''
     if request.method == 'POST' and 'uploadBtn' in request.POST:
         print("Upload")
         print(request)
-        corona_contacts = simple_upload(request.FILES)
+        file_url, healthy_id = simple_upload(request.FILES)
         return render(request, 'application1/simple_upload.html', {
-            'uploaded_file_url': corona_contacts
+            'uploaded_file_url': file_url,
+            'uploaded_file_id': healthy_id,
         })
-    if request.method == 'POST' and 'startBtn' in request.POST:
-        print("Start")
     return render(request, 'application1/simple_upload.html')
 
-'''
-def simple_upload(files):
-    urls = list()
-    fs = FileSystemStorage()
-    for file in files.getlist('infected_file'):
-        new_file_name = file.name.split(".")[-2] + "_infected" + ".kml"
-        if not fs.exists(new_file_name):
-            fs.save(new_file_name, file)
-            uploaded_file_url = fs.url(new_file_name)
-            list_linestrings = read_kml_line("./"+uploaded_file_url)
-            splitted_lines_list = split_line(list_linestrings, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', new_file_name.split(".")[-2])
-            #write_in_database(splitted_lines_list)
-    for file in files.getlist('healthy_file'):
-        new_file_name = file.name.split(".")[-2] + "_healthy" + ".kml"
-        if not fs.exists(new_file_name):
-            fs.save(new_file_name, file)
-        uploaded_file_url = fs.url(new_file_name)
-        urls.append(uploaded_file_url)
-    return urls
-'''
-
-
 
 def simple_upload(files):
+    '''
+    Reading the formular data, escpecially the input files (multiple)
+    :param files: The request.FILES dictionary
+    :return: a zipped shapefile of all intersections with a infected person
+    '''
     infected_persons = []
     test_persons = []
     infectedLines = []
@@ -101,7 +49,7 @@ def simple_upload(files):
             fs.save(new_file_name, file)
         uploaded_file_url = fs.url(new_file_name)
         list_linestrings = read_kml_line("./" + uploaded_file_url)
-        splitted_lines_list = split_line(list_linestrings, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', new_file_name.split(".")[-2])
+        splitted_lines_list = split_line(list_linestrings)
         infected_persons.append(splitted_lines_list)
 
     for file in files.getlist('healthy_file'):
@@ -110,98 +58,164 @@ def simple_upload(files):
             fs.save(new_file_name, file)
         uploaded_file_url = fs.url(new_file_name)
         list_linestrings = read_kml_line("./" + uploaded_file_url)
-        splitted_lines_list = split_line(list_linestrings, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', new_file_name.split(".")[-2])
+        splitted_lines_list = split_line(list_linestrings)
         test_persons.append(splitted_lines_list)
         healthyLines = splitted_lines_list
+
 
 
     for element in infected_persons:
         infectedLines += element
 
+    print(len(infectedLines))
+    #for element in test_persons:
+       # healthyLines += element
+    print("BBOX zeug")
     infectedLines, healthyLines = boundingBox_intersection(infectedLines, healthyLines)
+    print("Geom zeug")
+    result_geom = intersect_geom(infectedLines, healthyLines)
+    print(result_geom[0])
+    print("Time zeug")
+    result_time = intersect_time(result_geom)
+    print("Shape zeug")
+    output_file_name = str(healthyLines[0].personal_id)
+    if fs.exists(output_file_name):
+        fs.delete(output_file_name)
+    convert_crossline_to_shapefile(result_time,fs.base_location, output_file_name)
 
-    result_geom = intersect_geom(infectedLines, healthyLines, distance=10)
-    result_time = intersect_time(result_geom, delta=datetime.timedelta(minutes=15))
-    convert_crossline_to_shapefile(result_time,fs.base_location, "corona_contacts")
+    filenames = [f"media\{output_file_name}.shp", f"media\{output_file_name}.dbf", f"media\{output_file_name}.shx",
+                 f"media\{output_file_name}.prj"]
 
-    return fs.url("corona_contacts.shp")
+    with ZipFile(fs.base_location + f'/{output_file_name}.zip', 'w') as zip:
+        # writing each file one by one
+        for file in filenames:
+            zip.write(file)
 
+    return (fs.url(f"{output_file_name}.zip"), output_file_name)
 
-'''
-def simple_upload(request):
-    print(request.FILES)
-    print(request.FILES.getlist('infected_file'))
-    urls = list()
-    if request.method == 'POST' and request.FILES:
-        fs = FileSystemStorage()
-        for file in request.FILES.getlist('infected_file'):
-            new_file_name = file.name.split(".")[-2] + "_infected" + ".kml"
-            if not fs.exists(new_file_name):
-                fs.save(new_file_name, file)
-            uploaded_file_url = fs.url(new_file_name)
-            urls.append(uploaded_file_url)
-
-        for file in request.FILES.getlist('healthy_file'):
-            new_file_name = file.name.split(".")[-2] + "_healthy" + ".kml"
-            if not fs.exists(new_file_name):
-                fs.save(new_file_name, file)
-            uploaded_file_url = fs.url(new_file_name)
-            urls.append(uploaded_file_url)
-        return render(request, 'application1/simple_upload.html', {
-            'uploaded_file_url': urls
-        })
-    return render(request, 'application1/simple_upload.html')
-'''
-
-def workflow(urls_list_healthy):
-    for kml_file in urls_list_healthy:
-        kml_infected = read_kml_line(kml_file)
-        lines1 = split_line(kml_infected, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', kml_file.split(".")[-2])
-    #write_in_database(lines1)
 
 @csrf_exempt
 def post_infected_file(request):
+    '''
+    Request to post a kml file from Google Takeout of a infected person
+    The file (14 days, depending on the config file) is stored in a database
+    :param request: HTTP POST Request
+    :return: HttpResponse which confirmes a successfull upload
+    '''
     if request.method == 'POST':
         kml = request.body
         list_linestrings = read_kml_line(kml)
-        splitted_lines = split_line(list_linestrings, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', personal_id="Christian", sourceEPSG=4326)
-        #write_in_database(splitted_lines, "Christian")
-        return HttpResponse("Finished Uploading")
+        splitted_lines = split_line(list_linestrings)
+        write_in_database(splitted_lines)
+        return HttpResponse("Finished Uploading, your ID is" + str(splitted_lines[0].personal_id))
     return  HttpResponse("Please use a POST-Request")
-
 
 @csrf_exempt
 def post_healthy_file(request):
+    '''
+    Request to post a kml file from Google Takeout of a healthy person
+    The file is not stored in a database
+    :param request: HTTP POST Request
+    :return: HttpResponse with a zipped shapefile
+    '''
+    print(datetime.datetime.now())
+    fs = FileSystemStorage()
     if request.method == 'POST':
         kml = request.body
         list_linestrings = read_kml_line(kml)
-        healthyLines = split_line(list_linestrings, '2019-07-01T00:00:00Z', '2019-08-01T00:00:00Z', personal_id="Christian", sourceEPSG=4326)
-
-        infectedLines = []
+        healthyLines = split_line(list_linestrings)
+        infectedLines = get_infected_outof_db()
+        print(healthyLines[0])
+        print(infectedLines[0])
+        print("/n =====================================================================================================================")
         infectedLines, healthyLines = boundingBox_intersection(infectedLines, healthyLines)
+        result_geom = intersect_geom(infectedLines, healthyLines)
+        print("jetzt bin ich hier")
+        result_time = intersect_time(result_geom)
+        print("jetzt bin ich da")
+        output_file_name = str(healthyLines[0].personal_id)
+        if fs.exists(output_file_name):
+            fs.delete(output_file_name)
+        convert_crossline_to_shapefile(result_time, fs.base_location, output_file_name)
+        print("jetzt bin ich dort")
 
+        filenames = [f"media\{output_file_name}.shp", f"media\{output_file_name}.dbf", f"media\{output_file_name}.shx",
+                     f"media\{output_file_name}.prj"]
+        zip_subdir = "corona_intersections"
+        zip_filename = "%s.zip" % zip_subdir
+        response = HttpResponse(content_type='application/zip')
+        zip_file = zipfile.ZipFile(response, 'w')
+        for filename in filenames:
+            zip_file.write(filename)
+        response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
+        zip_file.close()
+        return response
 
-
-
-        return HttpResponse("Finished Uploading")
+        #return zip_files()
     return  HttpResponse("Please use a POST-Request")
 
 
-def write_in_database(list_linestring, personal_id):
-    for linestring in list_linestring:
-        #geos_lineString_geom = Geos_LineString((linestring.startpoint.getX(), linestring.startpoint.getY()), (linestring.endpoint.getX(), linestring.endpoint.getY()), srid=4326)
-        #print(linestring.ogrLinestring)
-        geos_lineString_geom = GEOSGeometry(str(linestring.ogrLinestring), srid=25832)
-        models_point_start = Models_Point(x=linestring.startpoint.getX(), y=linestring.startpoint.getY(), time_stamp=linestring.startpoint.getTimestamp())
-        models_point_end = Models_Point(x=linestring.endpoint.getX(), y=linestring.endpoint.getY(), time_stamp=linestring.endpoint.getTimestamp())
-        models_point_start.save()
-        models_point_end.save()
-        linestring = Models_Line_String(start_time=models_point_start.time_stamp, end_time=models_point_end.time_stamp, linienSegment=geos_lineString_geom)
-        linestring.save()
 
-def get_infected_outof_db(personal_id):
-    ergebnis_query_set = Models_Line_String.objects.filter(personal_id=personal_id)
-    infected_lines = []
-    for element in ergebnis_query_set:
-        #linestring = Linestring(element.linienSegment, element.end_time,)
-        pass
+
+
+
+@csrf_exempt
+def get_all_infected_lines_outof_db(request):
+    '''
+    Request to obtain all lines in the database
+    :param request: HTTP GET Request
+    :return: HTTPResponse with a geojson
+    '''
+    geojson = serialize('geojson', Models_Line_String.objects.all(),
+                        geometry_field='line_geom',
+                        fields=("personal_id", "start_time", "end_time"), srid=25832)
+    return HttpResponse(geojson)
+
+
+
+def get_all_infected_points_outof_db(request):
+    '''
+    Request to obtain all Points in the database
+    :param request: HTTP GET Request
+    :return: HTTPResponse with a geojson
+    '''
+    geojson = serialize('geojson', Models_Point.objects.all(),
+              geometry_field='point_geom',
+              fields=("time_stamp"), srid=25832)
+    return HttpResponse(geojson)
+
+
+@csrf_exempt
+def get_infected_lines_outof_db(request, personal_id):
+    '''
+    Request to obtain all lineStrings of a particular person
+    :param request: HTTP GET Request
+    :param personal_id:  Personal ID, which the user data were assigned to
+    :return: HTTPResponse with a geojson
+    '''
+    geojson = serialize('geojson', Models_Line_String.objects.filter(personal_id=personal_id),
+                        geometry_field='line_geom',
+                        fields=("personal_id", "start_time", "end_time"), srid=25832)
+    return HttpResponse(geojson)
+
+
+def delete_infected_lines(request, personal_id):
+    '''
+    Removes the (only) data of the lineStringObjects from the database
+    :param request:  HTTP GET Request
+    :param personal_id:  Personal ID, which the user data were assigned to
+    :return: HttpResponse which is confirming the removing
+    '''
+    queryset = Models_Line_String.objects.filter(personal_id=personal_id)
+    i = 0
+    if len(queryset) != 0:
+        #for element in queryset:
+        #    i +=1
+        #    element.start_point.delete()
+        #     if i == len(queryset):
+        #         element.end_point.delete()
+        # queryset.delete()
+        Models_Line_String.objects.filter(personal_id=personal_id).delete()
+        return HttpResponse(f"Delete {personal_id} from the database")
+    else:
+        return HttpResponse(f"{personal_id} is already deleted")
