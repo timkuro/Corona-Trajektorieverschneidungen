@@ -2,22 +2,64 @@
 
 {% block simple_upload %}
     <form method="post" enctype="multipart/form-data"> {% csrf_token %}
-        Infected: <input type="file" name="infected_file" multiple="multiple"/>
-        <br/>
-        Healthy: <input type="file" name="healthy_file" multiple="multiple"/>
-        <br/>
+
+        <div class="container">
+            <div class="row mb-2">
+                <div class="col-sm-1">
+                    <label>Infected:</label>
+                </div>
+                <div class="col-sm-3">
+                    <input type="file" name="infected_file" multiple="multiple"/>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-sm-1">
+                    <label>Healthy:</label>
+                </div>
+                <div class="col-sm-3">
+                    <input type="file" name="healthy_file" multiple="multiple"/>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-sm-1">
+                    <button type="submit" name="uploadBtn">Upload</button>
+                </div>
+            </div>
+            {% if uploaded_file_url %}
+                <div class="row mb-2 mt-2">
+                    <div class="col-sm-3">
+                        <p>Deine ID (Gesunde Person) ist: </p>
+                    </div>
+                    <div class="col-sm-9">
+                        <p>{{ uploaded_file_id }}</p>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-3">
+                        <p>Dein Ergebnis zum Downloaden:</p>
+                    </div>
+                    <div class="col-sm-9">
+                        <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-sm-3">
+                    <p><a href="{% url 'home' %}">Return to home</a></p>
+                </div>
+            </div>
+        </div>
+        <!--
         Vergleichszeitraum:
-        <br/>
-        <label for="startdate">Start Datum</label>
+        <br/><label for="startdate">Start Datum</label>
         <input type="date" id="startdate" name="startdate">
         <label for="enddate">End Datum</label>
         <input type="date" id="enddate" name="enddate">
+
         <br/>
-        <button type="submit" name="uploadBtn">Upload</button>
+        -->
+
         <!--- <button type="submit" name="startBtn">Starte Workflow</button> -->
     </form>
-    {% if uploaded_file_url %}
-        <p>Dein Ergebnis zum Downloaden: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
-    {% endif %}
-    <p><a href="{% url 'home' %}">Return to home</a></p>
+
 {% endblock %}

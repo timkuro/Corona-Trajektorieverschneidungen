@@ -4,7 +4,11 @@ from django.urls import path
 from . import views
 app_name = 'application1'
 urlpatterns = [
-    url(r'^$', views.einzel_Punkt_Anzeige, name='einzel_Punkt_Anzeige'),
-    #url(r'^(?P<point_id>\d+)/$', views.point_detail, name='point_detail'),
-    path('<int:question_id>/', views.detail, name='detail'),
+    path('upload/infected', views.post_infected_file, name='post_infected_file'),
+    path(r'upload/healthy', views.post_healthy_file, name='post_healthy_file'),
+    path(r'download/lines/infected', views.get_all_infected_lines_outof_db, name='get_all_infected_lines_outof_db'),
+    path('download/lines/infected/<str:personal_id>/', views.get_infected_lines_outof_db, name='get_infected_lines_outof_db'),
+    path('delete/infected/<str:personal_id>/', views.delete_infected_lines, name='delete_infected_lines'),
+    path(r'download/points/infected', views.get_all_infected_points_outof_db, name='get_all_infected_points_outof_db'),
+
 ]
