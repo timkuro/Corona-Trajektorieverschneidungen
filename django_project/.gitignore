@@ -1,0 +1,14 @@
+*.pyc
+.idea
+/.idea/*
+.iml
+.DS_Store
+.idea/
+dist/
+build/
+*.egg-info/
+#git rm --cached -r .idea
+__pycache__/
+*.kml
+media/
+#migrations/
