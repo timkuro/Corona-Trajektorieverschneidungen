@@ -69,7 +69,7 @@ print(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') + "  Dritte Linie g
 infectedLines = lines1
 healthyLines = lines2 + lines3
 
-if len(infectedLines)==0 or len(healthyLines)==0:
+if len(infectedLines) == 0 or len(healthyLines) == 0:
     raise Exception("Keine Eingabedaten")
 
 infectedLines, healthyLines = boundingBox_intersection(infectedLines, healthyLines)
