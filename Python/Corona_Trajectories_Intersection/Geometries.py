@@ -26,9 +26,6 @@ class Point:
     def __repr__(self):
         return f"Point:[X:{self.getX()}, Y: {self.getY()}, TimeStamp: {self.timestamp}]"
 
-    def __eq__(self, other):
-        return ogr.Geometry.Equal(self.__ogrPoint, other.geometry) and self.__timestamp == other.timestamp
-
     geometry = property(getGeometry)
     timestamp = property(getTimestamp)
 
