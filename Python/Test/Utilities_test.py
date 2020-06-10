@@ -64,7 +64,9 @@ class Utilities_test(unittest.TestCase):
     def test_split_lines(self):
         xml_from_string = read_kml_line(self.location_history_test_string)
         splitted_lines = split_line(xml_from_string, 0)
-        self.assertEqual(self.expected_splitted_lines_1, splitted_lines)
+        self.assertEqual(str(self.expected_splitted_lines_1[0]), str(splitted_lines[0]))
+        self.assertEqual(str(self.expected_splitted_lines_1[1]), str(splitted_lines[1]))
+        self.assertEqual(str(self.expected_splitted_lines_1[2]), str(splitted_lines[2]))
 
     def test_boundingBox_intersection(self):
         bbox_intersected_1 = boundingBox_intersection(self.expected_splitted_lines_1, self.expected_splitted_lines_2)
@@ -78,7 +80,8 @@ class Utilities_test(unittest.TestCase):
         splitted_bbox_1 = Linestring(Point(bbox_1, datetime.datetime.strptime('2019-07-02T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(bbox_2, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
         splitted_bbox_2 = Linestring(Point(bbox_2, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(bbox_3, datetime.datetime.strptime('2019-07-04T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
         expected_splitted_lines_bbox = [splitted_bbox_1, splitted_bbox_2]
-        self.assertEqual(expected_splitted_lines_bbox, bbox_intersected_1[0])
+        self.assertEqual(str(expected_splitted_lines_bbox[0]), str(bbox_intersected_1[0][0]))
+        self.assertEqual(str(expected_splitted_lines_bbox[1]), str(bbox_intersected_1[0][1]))
 
     def test_intersect_geom(self):
         intersection = intersect_geom(self.expected_splitted_lines_1, self.expected_splitted_lines_2)
@@ -92,8 +95,8 @@ class Utilities_test(unittest.TestCase):
         splitted_inter_geom_1 = Linestring(Point(inter_geom_1, datetime.datetime.strptime('2019-07-02T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(inter_geom_2, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
         splitted_inter_geom_2 = Linestring(Point(inter_geom_2, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), Point(inter_geom_3, datetime.datetime.strptime('2019-07-04T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
 
-        self.assertEqual(splitted_inter_geom_1, intersection[0].line1)
-        self.assertEqual(splitted_inter_geom_2, intersection[1].line1)
+        self.assertEqual(str(splitted_inter_geom_1), str(intersection[0].line1))
+        self.assertEqual(str(splitted_inter_geom_2), str(intersection[1].line1))
 
     def test_intersect_time(self):
         intersection = intersect_geom(self.expected_splitted_lines_1, self.expected_splitted_lines_2)
@@ -107,7 +110,7 @@ class Utilities_test(unittest.TestCase):
             Point(inter_temp_1, datetime.datetime.strptime('2019-07-02T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')),
             Point(inter_temp_2, datetime.datetime.strptime('2019-07-03T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')), 0)
 
-        self.assertEqual(splitted_inter_temp_1, temporal_intersection[0].line1)
+        self.assertEqual(str(splitted_inter_temp_1), str(temporal_intersection[0].line1))
 
 
 if __name__ == "__main__":
