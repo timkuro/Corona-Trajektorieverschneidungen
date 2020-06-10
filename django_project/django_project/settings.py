@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'corona',
         'USER': 'postgres',
-        'PASSWORD': '*****',
+        'PASSWORD': 'db',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }

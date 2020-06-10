@@ -4,7 +4,6 @@ from osgeo import ogr
 
 from Business_Logic.Geometries import Point, Linestring
 from Business_Logic.Utilities import *
-from application1.models import Point
 from application1.models import Point as Models_Point, Line_String as Models_Line_String
 from config import parameters
 
