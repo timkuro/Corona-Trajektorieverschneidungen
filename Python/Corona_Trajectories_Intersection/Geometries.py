@@ -1,5 +1,5 @@
 from time import localtime
-from osgeo import ogr, osr
+from osgeo import ogr
 from config import parameters
 
 class Point:

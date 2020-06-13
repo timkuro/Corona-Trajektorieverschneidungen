@@ -1,6 +1,5 @@
 # coding=utf-8
 from Corona_Trajectories_Intersection.Utilities import *
-import sys
 
 path_timmy=r"C:\Users\Tim\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"
 path_tommy=r"D:\hs-bochum.de\Christian Koert - GI_Projekt_Wytzisk\Standortverlauf_Juli_2019"

@@ -1,6 +1,7 @@
 # coding=utf-8
 import xml.etree.ElementTree as ET
-import os, uuid, math, datetime
+import os, uuid, datetime
+from osgeo import osr
 from Corona_Trajectories_Intersection.Geometries import *
 from config import parameters
 
@@ -71,10 +72,18 @@ def split_line(input_line, personal_id=None):
     ogrPoint.Transform(transform_objekt)
     old_point = Point(ogrPoint, old_time_py)
 
-    startdate_py = datetime.datetime.strptime(parameters['starttime'], '%Y-%m-%dT%H:%M:%SZ')
-    enddate_py = datetime.datetime.strptime(parameters['endtime'], '%Y-%m-%dT%H:%M:%SZ')
-    # k = 0
-    # loop reads large line and splits into sections
+    # set starttime and endtime
+    if parameters['starttime'] == None or parameters['endtime'] == None:
+        starttime = (datetime.datetime.now() - datetime.timedelta(days=14)).strftime('%Y-%m-%dT%H:%M:%SZ')
+        endtime = (datetime.datetime.now()).strftime('%Y-%m-%dT%H:%M:%SZ')
+    else:
+        starttime = parameters['starttime']
+        endtime = parameters['endtime']
+
+    startdate_py = datetime.datetime.strptime(starttime, '%Y-%m-%dT%H:%M:%SZ')
+    enddate_py = datetime.datetime.strptime(endtime, '%Y-%m-%dT%H:%M:%SZ')
+
+    # loop reads track and splits into sections
     for i in range(3,len(input_line), 2):
         # create attributes vor the point
         time_iso = (input_line[i].text)
@@ -86,7 +95,7 @@ def split_line(input_line, personal_id=None):
         point = Point(ogrPoint, time_py)
         # filter points aren't in time frame
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
-            distance = math.sqrt((point.getX()-old_point.getX())**2 + (point.getY()-old_point.getY())**2)
+            distance = ((point.getX()-old_point.getX())**2 + (point.getY()-old_point.getY())**2)**0.5
             time_delta = (point.timestamp-old_point.timestamp).total_seconds()
             # filter outliers (speed > 50 m/s)
             if time_delta > 0 and distance < 5000:
@@ -237,10 +246,10 @@ def intersect_time(crossings):
 
     for crossing in crossings:
         # calculate time with delta
-        line1start = crossing.line1.startpoint.timestamp - parameters['timedelta']
-        line1end = crossing.line1.endpoint.timestamp + parameters['timedelta']
-        line2start = crossing.line2.startpoint.timestamp - parameters['timedelta']
-        line2end = crossing.line2.endpoint.timestamp + parameters['timedelta']
+        line1start = crossing.line1.startpoint.timestamp - datetime.timedelta(minutes=parameters['timedelta'])
+        line1end = crossing.line1.endpoint.timestamp + datetime.timedelta(minutes=parameters['timedelta'])
+        line2start = crossing.line2.startpoint.timestamp - datetime.timedelta(minutes=parameters['timedelta'])
+        line2end = crossing.line2.endpoint.timestamp + datetime.timedelta(minutes=parameters['timedelta'])
 
         # check temporal intersection
         if (line2start >= line1start and line2start <= line1end) or (line2end >= line1start and line2end <= line1end) or \
