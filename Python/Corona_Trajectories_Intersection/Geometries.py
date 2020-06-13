@@ -2,6 +2,7 @@ from time import localtime
 from osgeo import ogr
 from config import parameters
 
+
 class Point:
     '''
     Point Object
@@ -16,8 +17,10 @@ class Point:
 
     def getX(self):
         return self.__ogrPoint.GetX()
+
     def getY(self):
         return self.__ogrPoint.GetY()
+
     def getGeometry(self):
         return self.__ogrPoint
 
@@ -25,6 +28,7 @@ class Point:
         return f"Point:[X:{self.getX()}, Y: {self.getY()}, TimeStamp: {self.timestamp}]"
 
     geometry = property(getGeometry)
+
 
 class Linestring:
     '''
@@ -49,27 +53,8 @@ class Linestring:
         else:
             self.ogrLinestring = ogrLinestring
 
-        if ogrBuffer is None:
-            self.ogr_Buffer = self.ogrLinestring.Buffer(parameters['distance'])
-        else:
-            self.ogr_Buffer = ogrBuffer
+        self.ogr_Buffer = ogrBuffer
 
-    def intersect_Buffer(self, other_line):
-        '''
-        DEPRECATED
-        Intersects the buffers two lines
-
-        :param other_line: line to be intersected
-        :return: crossing area
-        '''
-
-        intersect_buffer = self.ogr_Buffer.Intersection(other_line.ogrBuffer)
-
-        if not ogr.Geometry.IsEmpty(intersect_buffer):
-            cross_area = Cross_Geometry(intersect_buffer, self, other_line)
-            return cross_area
-        else:
-            raise Exception("No intersection found")
 
     def intersect_Buffer_line(self, other_line):
         '''
@@ -78,6 +63,9 @@ class Linestring:
         :param other_line:
         :return:
         '''
+
+        if self.ogr_Buffer is None:
+            self.ogr_Buffer = self.ogrLinestring.Buffer(parameters['distance'])
 
         intersect_buffer_line = self.ogr_Buffer.Intersection(other_line.ogrLinestring)
 
@@ -89,6 +77,7 @@ class Linestring:
 
     def __repr__(self):
         return f"Line:[geometry: {self.ogrLinestring}, id: {self.personal_id}, Startpoint: {self.startpoint}, Endpoint: {self.endpoint}]"
+
 
 class Cross_Geometry:
     '''
@@ -106,6 +95,7 @@ class Cross_Geometry:
 
     def __repr__(self):
         return f"Crossgeometry[{self.geometry}, 1: {self.line1}, 2: {self.line2}]"
+
 
 if __name__ == "__main__":
     pass
