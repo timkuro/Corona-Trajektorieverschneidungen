@@ -12,7 +12,7 @@ class Point:
 
     def __init__(self, ogrPoint, timestamp):
         self.__ogrPoint = ogrPoint
-        self.__timestamp = timestamp
+        self.timestamp = timestamp
 
     def getX(self):
         return self.__ogrPoint.GetX()
@@ -20,14 +20,11 @@ class Point:
         return self.__ogrPoint.GetY()
     def getGeometry(self):
         return self.__ogrPoint
-    def getTimestamp(self):
-        return self.__timestamp
 
     def __repr__(self):
         return f"Point:[X:{self.getX()}, Y: {self.getY()}, TimeStamp: {self.timestamp}]"
 
     geometry = property(getGeometry)
-    timestamp = property(getTimestamp)
 
 class Linestring:
     '''
