@@ -93,11 +93,11 @@ def split_line(input_line, personal_id=None):
         ogrPoint.AddPoint_2D(float(coordinate[1]), float(coordinate[0]))
         ogrPoint.Transform(transform_objekt)
         point = Point(ogrPoint, time_py)
-        # filter points aren't in time frame
+        # filter points aren't in given time frame
         if (old_point.timestamp > startdate_py) and (point.timestamp < enddate_py):
             distance = ((point.getX()-old_point.getX())**2 + (point.getY()-old_point.getY())**2)**0.5
             time_delta = (point.timestamp-old_point.timestamp).total_seconds()
-            # filter outliers (speed > 50 m/s)
+            # filter outliers (speed > 50 m/s) and lines with a distance over 5000m
             if time_delta > 0 and distance < 5000:
                 velocity = distance/time_delta
                 if velocity < 50: # [m/s]
@@ -177,11 +177,10 @@ def intersect_geom(linestrings_infected, linestrings_healthy):
     :param linestrings_healthy: input other linestrings of the healthy person
     :return: geometric intersection
     '''
-    #preparation
+
     #create result object
     geometric_intersections = list()
     #sweep status structure
-    # sss anlegen
     sss = set()
     #create point lists
     ptl_1 = list()
@@ -192,9 +191,12 @@ def intersect_geom(linestrings_infected, linestrings_healthy):
 
     # each point gets his line
     for line in linestrings_infected:
-        #
-        ptl_1.append([line.startpoint.getX() - parameters['distance'], line])
-        ptl_1.append([line.endpoint.getX() + parameters['distance'], line])
+        if (line.startpoint.getX() < line.endpoint.getX()):
+            ptl_1.append([line.startpoint.getX() - parameters['distance'], line])
+            ptl_1.append([line.endpoint.getX() + parameters['distance'], line])
+        else:
+            ptl_1.append([line.startpoint.getX() + parameters['distance'], line])
+            ptl_1.append([line.endpoint.getX() - parameters['distance'], line])
         lines_set_infected.add(line)
     for line in linestrings_healthy:
         ptl_2.append([line.startpoint.getX(), line])
