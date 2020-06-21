@@ -248,10 +248,10 @@ def intersect_time(crossings):
 
     for crossing in crossings:
         # calculate time with delta
-        line1start = crossing.line1.startpoint.timestamp - datetime.timedelta(minutes=parameters['timedelta'])
-        line1end = crossing.line1.endpoint.timestamp + datetime.timedelta(minutes=parameters['timedelta'])
-        line2start = crossing.line2.startpoint.timestamp - datetime.timedelta(minutes=parameters['timedelta'])
-        line2end = crossing.line2.endpoint.timestamp + datetime.timedelta(minutes=parameters['timedelta'])
+        line1start = crossing.line1.startpoint.timestamp - datetime.timedelta(minutes=(parameters['timedelta']/2))
+        line1end = crossing.line1.endpoint.timestamp + datetime.timedelta(minutes=(parameters['timedelta']/2))
+        line2start = crossing.line2.startpoint.timestamp - datetime.timedelta(minutes=(parameters['timedelta']/2))
+        line2end = crossing.line2.endpoint.timestamp + datetime.timedelta(minutes=(parameters['timedelta']/2))
 
         # check temporal intersection
         if (line2start >= line1start and line2start <= line1end) or (line2end >= line1start and line2end <= line1end) or \
