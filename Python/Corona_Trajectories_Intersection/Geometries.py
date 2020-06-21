@@ -8,7 +8,7 @@ class Point:
     Point Object
 
     __ogrPoint: Type ogrGeometry
-    __timestamp: Type datetime
+    timestamp: Type datetime
     '''
 
     def __init__(self, ogrPoint, timestamp):
