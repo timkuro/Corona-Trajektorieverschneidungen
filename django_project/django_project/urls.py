@@ -23,7 +23,7 @@ from application1 import views
 
 urlpatterns = [
     url(r'upload/formular', views.multiple_buttons, name='multiple_buttons'),
-    path('', views.Home.as_view(), name='home'),
+    path('', views.Base.as_view(), name='base'),
     path('admin/', admin.site.urls),
     url('', include('application1.urls', namespace='application1'))
 ]

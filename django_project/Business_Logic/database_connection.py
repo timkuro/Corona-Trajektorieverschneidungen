@@ -4,7 +4,6 @@ from osgeo import ogr
 
 from Business_Logic.Geometries import Point, Linestring
 from Business_Logic.Utilities import *
-from application1.models import Point
 from application1.models import Point as Models_Point, Line_String as Models_Line_String
 from config import parameters
 
@@ -15,17 +14,53 @@ def write_in_database(list_linestring):
     :param list_linestring: a list of Geometries.Linestring objects
     '''
     for linestring in list_linestring:
-        geos_point_geom = geosPoint(x=linestring.startpoint.getX(),y=linestring.startpoint.getY())
-        models_point_start = Models_Point(x=linestring.startpoint.getX(), y=linestring.startpoint.getY(), time_stamp=linestring.startpoint.getTimestamp(), point_geom=geos_point_geom)
-        geos_point_geom = geosPoint(x=linestring.endpoint.getX(), y=linestring.endpoint.getY())
-        models_point_end = Models_Point(x=linestring.endpoint.getX(), y=linestring.endpoint.getY(), time_stamp=linestring.endpoint.getTimestamp(), point_geom=geos_point_geom)
-        models_point_start.save()
-        models_point_end.save()
+        already_existing = [0, 0]
+        try:
+            models_point_start = Models_Point.objects.get(x=linestring.startpoint.getX(), y=linestring.startpoint.getY(), time_stamp=linestring.startpoint.timestamp)
+            already_existing[0] = 1
+        except Models_Point.DoesNotExist:
+            geos_point_geom = geosPoint(x=linestring.startpoint.getX(), y=linestring.startpoint.getY())
+            models_point_start = Models_Point(x=linestring.startpoint.getX(),
+                                              y=linestring.startpoint.getY(),
+                                              time_stamp=linestring.startpoint.timestamp,
+                                              point_geom=geos_point_geom)
+            models_point_start.save()
 
-        geos_lineString_geom = GEOSGeometry(str(linestring.ogrLinestring), srid=25832)
-        geos_buffer = geos_lineString_geom.buffer(parameters['distance'])
-        linestring = Models_Line_String(start_point=models_point_start, end_point=models_point_end, start_time=models_point_start.time_stamp, end_time=models_point_end.time_stamp, personal_id = str(linestring.personal_id), line_geom=geos_lineString_geom, buffer_geom=geos_buffer)
-        linestring.save()
+        try:
+            models_point_end = Models_Point.objects.get(x=linestring.endpoint.getX(), y=linestring.endpoint.getY(), time_stamp=linestring.endpoint.timestamp)
+            already_existing[1] = 1
+        except Models_Point.DoesNotExist:
+            geos_point_geom = geosPoint(x=linestring.endpoint.getX(), y=linestring.endpoint.getY())
+            models_point_end = Models_Point(x=linestring.endpoint.getX(), y=linestring.endpoint.getY(),
+                                            time_stamp=linestring.endpoint.timestamp, point_geom=geos_point_geom)
+            models_point_end.save()
+
+
+
+
+        #geos_lineString_geom = GEOSGeometry(str(linestring.ogrLinestring), srid=25832)
+        #geos_buffer = geos_lineString_geom.buffer(parameters['distance'])
+        #linestring = Models_Line_String(start_point=models_point_start, end_point=models_point_end, start_time=models_point_start.time_stamp, end_time=models_point_end.time_stamp, personal_id = str(linestring.personal_id), line_geom=geos_lineString_geom, buffer_geom=geos_buffer)
+        #linestring.save()
+        if already_existing == [0,0]:
+            geos_lineString_geom = GEOSGeometry(str(linestring.ogrLinestring), srid=25832)
+            geos_buffer = geos_lineString_geom.buffer(parameters['distance'])
+            linestring = Models_Line_String(start_point=models_point_start,
+                                                end_point=models_point_end,
+                                                start_time=models_point_start.time_stamp,
+                                                end_time=models_point_end.time_stamp,
+                                                personal_id=str(linestring.personal_id),
+                                                line_geom=geos_lineString_geom,
+                                                buffer_geom=geos_buffer)
+            try:
+                linestring.save()
+            except:
+                existingID = Models_Line_String.objects.get(start_point=models_point_start, end_point=models_point_end).personal_id
+        else:
+            existingID = Models_Line_String.objects.get(start_point=models_point_start,
+                                                    end_point=models_point_end).personal_id
+
+    return existingID
 
 def get_infected_outof_db():
     '''

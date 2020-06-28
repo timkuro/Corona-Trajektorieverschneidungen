@@ -1,14 +1,16 @@
 import datetime
 
 parameters = dict(
+    # meters
     distance=10,
-    timedelta=datetime.timedelta(minutes=15),
+    # minutes
+    timedelta=15,
 
+    # epsg codes
     sourceEPSG=4326,
     targetEPSG=25832,
 
+    # if starttime or endtime are None, then it automatically use the last 14 days
     starttime='2019-07-01T00:00:00Z',
     endtime='2019-08-01T00:00:00Z'
 )
-'''starttime=(datetime.datetime.now()-datetime.timedelta(days=14)).strftime('%Y-%m-%dT%H:%M:%SZ'),
-    endtime=(datetime.datetime.now()).strftime('%Y-%m-%dT%H:%M:%SZ')'''

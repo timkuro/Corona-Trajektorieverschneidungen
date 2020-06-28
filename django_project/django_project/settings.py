@@ -130,7 +130,6 @@ MEDIA_URL =  '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 PROJ_LIB = r"C:\Users\chris\anaconda3\envs\django\Library\share\proj"
-
 SERIALIZATION_MODULES = {
     "geojson": "django.contrib.gis.serializers.geojson",
  }

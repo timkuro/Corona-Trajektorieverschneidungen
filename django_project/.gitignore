@@ -11,4 +11,3 @@ build/
 __pycache__/
 *.kml
 media/
-#migrations/
