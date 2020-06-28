@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 from application1 import views
 
 urlpatterns = [
-    url(r'upload/formular', views.multiple_buttons, name='multiple_buttons'),
+    url(r'upload/formular', views.request_formular, name='request_formular'),
     path('', views.Base.as_view(), name='base'),
     path('admin/', admin.site.urls),
     url('', include('application1.urls', namespace='application1'))

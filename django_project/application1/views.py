@@ -18,7 +18,7 @@ test_persons = []
 class Base(TemplateView):
     template_name = 'base.html'
 
-def multiple_buttons(request):
+def request_formular(request):
     '''
 
     :param request:
