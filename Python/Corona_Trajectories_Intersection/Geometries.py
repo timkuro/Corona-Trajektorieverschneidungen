@@ -61,7 +61,7 @@ class Linestring:
         Intersects a line with a buffer of an other line
 
         :param other_line:
-        :return:
+        :return cross area
         '''
 
         if self.ogr_Buffer is None:

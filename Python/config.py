@@ -1,5 +1,3 @@
-import datetime
-
 parameters = dict(
     # meters
     distance=10,
